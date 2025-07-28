@@ -10,132 +10,143 @@ import {
 } from "@/components/ui/chart"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const chartData = [
-  { date: "2024-04-01", desktop: 222, mobile: 150 },
-  { date: "2024-04-02", desktop: 97, mobile: 180 },
-  { date: "2024-04-03", desktop: 167, mobile: 120 },
-  { date: "2024-04-04", desktop: 242, mobile: 260 },
-  { date: "2024-04-05", desktop: 373, mobile: 290 },
-  { date: "2024-04-06", desktop: 301, mobile: 340 },
-  { date: "2024-04-07", desktop: 245, mobile: 180 },
-  { date: "2024-04-08", desktop: 409, mobile: 320 },
-  { date: "2024-04-09", desktop: 59, mobile: 110 },
-  { date: "2024-04-10", desktop: 261, mobile: 190 },
-  { date: "2024-04-11", desktop: 327, mobile: 350 },
-  { date: "2024-04-12", desktop: 292, mobile: 210 },
-  { date: "2024-04-13", desktop: 342, mobile: 380 },
-  { date: "2024-04-14", desktop: 137, mobile: 220 },
-  { date: "2024-04-15", desktop: 120, mobile: 170 },
-  { date: "2024-04-16", desktop: 138, mobile: 190 },
-  { date: "2024-04-17", desktop: 446, mobile: 360 },
-  { date: "2024-04-18", desktop: 364, mobile: 410 },
-  { date: "2024-04-19", desktop: 243, mobile: 180 },
-  { date: "2024-04-20", desktop: 89, mobile: 150 },
-  { date: "2024-04-21", desktop: 137, mobile: 200 },
-  { date: "2024-04-22", desktop: 224, mobile: 170 },
-  { date: "2024-04-23", desktop: 138, mobile: 230 },
-  { date: "2024-04-24", desktop: 387, mobile: 290 },
-  { date: "2024-04-25", desktop: 215, mobile: 250 },
-  { date: "2024-04-26", desktop: 75, mobile: 130 },
-  { date: "2024-04-27", desktop: 383, mobile: 420 },
-  { date: "2024-04-28", desktop: 122, mobile: 180 },
-  { date: "2024-04-29", desktop: 315, mobile: 240 },
-  { date: "2024-04-30", desktop: 454, mobile: 380 },
-  { date: "2024-05-01", desktop: 165, mobile: 220 },
-  { date: "2024-05-02", desktop: 293, mobile: 310 },
-  { date: "2024-05-03", desktop: 247, mobile: 190 },
-  { date: "2024-05-04", desktop: 385, mobile: 420 },
-  { date: "2024-05-05", desktop: 481, mobile: 390 },
-  { date: "2024-05-06", desktop: 498, mobile: 520 },
-  { date: "2024-05-07", desktop: 388, mobile: 300 },
-  { date: "2024-05-08", desktop: 149, mobile: 210 },
-  { date: "2024-05-09", desktop: 227, mobile: 180 },
-  { date: "2024-05-10", desktop: 293, mobile: 330 },
-  { date: "2024-05-11", desktop: 335, mobile: 270 },
-  { date: "2024-05-12", desktop: 197, mobile: 240 },
-  { date: "2024-05-13", desktop: 197, mobile: 160 },
-  { date: "2024-05-14", desktop: 448, mobile: 490 },
-  { date: "2024-05-15", desktop: 473, mobile: 380 },
-  { date: "2024-05-16", desktop: 338, mobile: 400 },
-  { date: "2024-05-17", desktop: 499, mobile: 420 },
-  { date: "2024-05-18", desktop: 315, mobile: 350 },
-  { date: "2024-05-19", desktop: 235, mobile: 180 },
-  { date: "2024-05-20", desktop: 177, mobile: 230 },
-  { date: "2024-05-21", desktop: 82, mobile: 140 },
-  { date: "2024-05-22", desktop: 81, mobile: 120 },
-  { date: "2024-05-23", desktop: 252, mobile: 290 },
-  { date: "2024-05-24", desktop: 294, mobile: 220 },
-  { date: "2024-05-25", desktop: 201, mobile: 250 },
-  { date: "2024-05-26", desktop: 213, mobile: 170 },
-  { date: "2024-05-27", desktop: 420, mobile: 460 },
-  { date: "2024-05-28", desktop: 233, mobile: 190 },
-  { date: "2024-05-29", desktop: 78, mobile: 130 },
-  { date: "2024-05-30", desktop: 340, mobile: 280 },
-  { date: "2024-05-31", desktop: 178, mobile: 230 },
-  { date: "2024-06-01", desktop: 178, mobile: 200 },
-  { date: "2024-06-02", desktop: 470, mobile: 410 },
-  { date: "2024-06-03", desktop: 103, mobile: 160 },
-  { date: "2024-06-04", desktop: 439, mobile: 380 },
-  { date: "2024-06-05", desktop: 88, mobile: 140 },
-  { date: "2024-06-06", desktop: 294, mobile: 250 },
-  { date: "2024-06-07", desktop: 323, mobile: 370 },
-  { date: "2024-06-08", desktop: 385, mobile: 320 },
-  { date: "2024-06-09", desktop: 438, mobile: 480 },
-  { date: "2024-06-10", desktop: 155, mobile: 200 },
-  { date: "2024-06-11", desktop: 92, mobile: 150 },
-  { date: "2024-06-12", desktop: 492, mobile: 420 },
-  { date: "2024-06-13", desktop: 81, mobile: 130 },
-  { date: "2024-06-14", desktop: 426, mobile: 380 },
-  { date: "2024-06-15", desktop: 307, mobile: 350 },
-  { date: "2024-06-16", desktop: 371, mobile: 310 },
-  { date: "2024-06-17", desktop: 475, mobile: 520 },
-  { date: "2024-06-18", desktop: 107, mobile: 170 },
-  { date: "2024-06-19", desktop: 341, mobile: 290 },
-  { date: "2024-06-20", desktop: 408, mobile: 450 },
-  { date: "2024-06-21", desktop: 169, mobile: 210 },
-  { date: "2024-06-22", desktop: 317, mobile: 270 },
-  { date: "2024-06-23", desktop: 480, mobile: 530 },
-  { date: "2024-06-24", desktop: 132, mobile: 180 },
-  { date: "2024-06-25", desktop: 141, mobile: 190 },
-  { date: "2024-06-26", desktop: 434, mobile: 380 },
-  { date: "2024-06-27", desktop: 448, mobile: 490 },
-  { date: "2024-06-28", desktop: 149, mobile: 200 },
-  { date: "2024-06-29", desktop: 103, mobile: 160 },
-  { date: "2024-06-30", desktop: 446, mobile: 400 },
+const chartDataTest = [
+  { date: "2024-04-01", price: 222 },
+  { date: "2024-04-02", price: 97 },
+  { date: "2024-04-03", price: 167 },
+  { date: "2024-04-04", price: 242 },
+  { date: "2024-04-05", price: 373 },
+  { date: "2024-04-06", price: 301 },
+  { date: "2024-04-07", price: 245 },
+  { date: "2024-04-08", price: 409 },
+  { date: "2024-04-09", price: 59 },
+  { date: "2024-04-10", price: 261 },
+  { date: "2024-04-11", price: 327 },
+  { date: "2024-04-12", price: 292 },
+  { date: "2024-04-13", price: 342 },
+  { date: "2024-04-14", price: 137 },
+  { date: "2024-04-15", price: 120 },
+  { date: "2024-04-16", price: 138 },
+  { date: "2024-04-17", price: 446 },
+  { date: "2024-04-18", price: 364 },
+  { date: "2024-04-19", price: 243 },
+  { date: "2024-04-20", price: 89 },
+  { date: "2024-04-21", price: 137 },
+  { date: "2024-04-22", price: 224 },
+  { date: "2024-04-23", price: 138 },
+  { date: "2024-04-24", price: 387 },
+  { date: "2024-04-25", price: 215 },
+  { date: "2024-04-26", price: 75 },
+  { date: "2024-04-27", price: 383 },
+  { date: "2024-04-28", price: 122 },
+  { date: "2024-04-29", price: 315 },
+  { date: "2024-04-30", price: 454 },
+  { date: "2024-05-01", price: 165 },
+  { date: "2024-05-02", price: 293 },
+  { date: "2024-05-03", price: 247 },
+  { date: "2024-05-04", price: 385 },
+  { date: "2024-05-05", price: 481 },
+  { date: "2024-05-06", price: 498 },
+  { date: "2024-05-07", price: 388 },
+  { date: "2024-05-08", price: 149 },
+  { date: "2024-05-09", price: 227 },
+  { date: "2024-05-10", price: 293 },
+  { date: "2024-05-11", price: 335 },
+  { date: "2024-05-12", price: 197 },
+  { date: "2024-05-13", price: 197 },
+  { date: "2024-05-14", price: 448 },
+  { date: "2024-05-15", price: 473 },
+  { date: "2024-05-16", price: 338 },
+  { date: "2024-05-17", price: 499 },
+  { date: "2024-05-18", price: 315 },
+  { date: "2024-05-19", price: 235 },
+  { date: "2024-05-20", price: 177 },
+  { date: "2024-05-21", price: 82 },
+  { date: "2024-05-22", price: 81 },
+  { date: "2024-05-23", price: 252 },
+  { date: "2024-05-24", price: 294 },
+  { date: "2024-05-25", price: 201 },
+  { date: "2024-05-26", price: 213 },
+  { date: "2024-05-27", price: 420 },
+  { date: "2024-05-28", price: 233 },
+  { date: "2024-05-29", price: 78 },
+  { date: "2024-05-30", price: 340 },
+  { date: "2024-05-31", price: 178 },
+  { date: "2024-06-01", price: 178 },
+  { date: "2024-06-02", price: 470 },
+  { date: "2024-06-03", price: 103 },
+  { date: "2024-06-04", price: 439 },
+  { date: "2024-06-05", price: 88 },
+  { date: "2024-06-06", price: 294 },
+  { date: "2024-06-07", price: 323 },
+  { date: "2024-06-08", price: 385 },
+  { date: "2024-06-09", price: 438 },
+  { date: "2024-06-10", price: 155 },
+  { date: "2024-06-11", price: 92 },
+  { date: "2024-06-12", price: 492 },
+  { date: "2024-06-13", price: 81 },
+  { date: "2024-06-14", price: 426 },
+  { date: "2024-06-15", price: 307 },
+  { date: "2024-06-16", price: 371 },
+  { date: "2024-06-17", price: 475 },
+  { date: "2024-06-18", price: 107 },
+  { date: "2024-06-19", price: 341 },
+  { date: "2024-06-20", price: 408 },
+  { date: "2024-06-21", price: 169 },
+  { date: "2024-06-22", price: 317 },
+  { date: "2024-06-23", price: 480 },
+  { date: "2024-06-24", price: 132 },
+  { date: "2024-06-25", price: 141 },
+  { date: "2024-06-26", price: 434 },
+  { date: "2024-06-27", price: 448 },
+  { date: "2024-06-28", price: 149 },
+  { date: "2024-06-29", price: 103 },
+  { date: "2024-06-30", price: 446 },
 ]
 const chartConfig = {
-  views: {
-    label: "Page Views",
+  intervals: {
+    label: "Intervals",
   },
-  desktop: {
-    label: "Desktop",
+  price: {
+    label: "Price",
     color: "var(--chart-1)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--chart-2)",
   },
 } satisfies ChartConfig
 
-const PriceTrend = () => {
-  const [activeChart, setActiveChart] =
-    React.useState<keyof typeof chartConfig>("desktop")
-  const total = React.useMemo(
-    () => ({
-      desktop: chartData.reduce((acc, curr) => acc + curr.desktop, 0),
-      mobile: chartData.reduce((acc, curr) => acc + curr.mobile, 0),
-    }),
-    []
-  )
+type ChartData = { date: string; price: number }
+
+interface PriceTrendProps {
+  symbol?: string;
+}
+
+const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
+  const [days, setDays] = React.useState(0);
+  const [chartData, setChartData] = React.useState<ChartData[]>([]);
+  React.useEffect(() => {
+    setChartData(chartDataTest);
+    // const fetchData = async () => {
+    //   fetch(`/api/stocks/chart?symbol=${symbol}&days=${days}`, {
+    //     method: 'GET',
+    //   })
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     setChartData(data);
+    //   })
+    //   .catch(error => {
+    //     console.error('Error fetching chart data:', error);
+    //   });
+    // };
+    // fetchData();
+  }, [symbol, days]);
   return (
     <>
       <Tabs defaultValue="live" className="w-[400px]">
         <TabsList>
-          <TabsTrigger value="live">Live</TabsTrigger>
-          <TabsTrigger value="day">1D</TabsTrigger>
-          <TabsTrigger value="week">1W</TabsTrigger>
-          <TabsTrigger value="month">1M</TabsTrigger>
-          <TabsTrigger value="year">1Y</TabsTrigger>
+          <TabsTrigger value="live" onClick={() => setDays(0)}>Live</TabsTrigger>
+          <TabsTrigger value="day" onClick={() => setDays(1)}>1D</TabsTrigger>
+          <TabsTrigger value="week" onClick={() => setDays(7)}>1W</TabsTrigger>
+          <TabsTrigger value="month" onClick={() => setDays(30)}>1M</TabsTrigger>
+          <TabsTrigger value="year" onClick={() => setDays(365)}>1Y</TabsTrigger>
         </TabsList>
         <TabsContent value="live">
           View live data here.
@@ -184,7 +195,7 @@ const PriceTrend = () => {
             content={
               <ChartTooltipContent
                 className="w-[150px]"
-                nameKey="views"
+                nameKey="price"
                 labelFormatter={(value) => {
                   return new Date(value).toLocaleDateString("en-US", {
                     month: "short",
@@ -196,9 +207,9 @@ const PriceTrend = () => {
             }
           />
           <Line
-            dataKey={activeChart}
+            dataKey="price"
             type="monotone"
-            stroke={`var(--color-${activeChart})`}
+            stroke="var(--chart-1)"
             strokeWidth={2}
             dot={false}
           />
