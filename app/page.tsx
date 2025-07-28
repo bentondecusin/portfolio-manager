@@ -1,11 +1,22 @@
-import Image from "next/image";
+import StockList from "./components/StockList";
+import PriceTrend from "./components/PriceTrend";
+import PortfolioList from "./components/PortfolioList";
+
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        Hi
-      </main>
+    <div>
+      <div className="container mx-auto p-4 flex">
+        <div className="w-1/2 pr-2">
+          <PriceTrend />
+        </div>
+        <div className="w-1/2 pl-2">
+          <StockList />
+        </div>
+      </div>
+      <div className="container mx-auto p-4">
+        <PortfolioList />
+      </div>
     </div>
   );
 }
