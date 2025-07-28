@@ -32,17 +32,95 @@ export default function TradeWindow({ isOpen, onClose, preTradeSymbol }) {
               Trade <a className="bg-red-900"></a>
               {preTradeSymbol} at 0 commission fee
             </h2>
-            <div className="flex flex-col">
-              {/* <p>Your current holding</p>
-              <div>
-                <Button>Buy</Button>
-                <Button>Sell</Button>
-              </div> */}
-            </div>
+            <TradingWindow ticker="AAPL" availableCash={12000} holdings={50} />
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
-  
 }
+
+type TradeMode = "BUY" | "SELL";
+
+interface TradingWindowProps {
+  ticker: string;
+  availableCash: number;
+  holdings: number;
+}
+
+const TradingWindow: React.FC<TradingWindowProps> = ({
+  ticker,
+  availableCash,
+  holdings,
+}) => {
+  const [quantity, setQuantity] = useState(0);
+  const [mode, setMode] = useState<TradeMode>("BUY");
+
+  const increment = () => setQuantity((prev) => prev + 1);
+  const decrement = () => setQuantity((prev) => (prev > 0 ? prev - 1 : 0));
+
+  const toggleMode = () => setMode((prev) => (prev === "BUY" ? "SELL" : "BUY"));
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value, 10);
+    setQuantity(isNaN(val) ? 0 : val);
+  };
+
+  const handleExecute = () => {
+    console.log("Execute trade:", { mode, ticker, quantity });
+  };
+
+  return (
+    <div className="max-w-md mx-auto  p-6 space-y-4 bg-white">
+      <h2 className="text-xl font-bold text-center">Trade {ticker}</h2>
+
+      <div className="flex justify-between text-sm text-gray-600">
+        <div>Available Cash: ${availableCash.toFixed(2)}</div>
+        <div>Holdings: {holdings} shares</div>
+      </div>
+
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={decrement}
+          className="px-3 py-1 text-xl border rounded hover:bg-gray-100"
+        >
+          –
+        </button>
+
+        <input
+          type="number"
+          min={0}
+          className="w-20 text-center border rounded px-2 py-1"
+          value={quantity}
+          onChange={handleChange}
+        />
+
+        <button
+          onClick={increment}
+          className="px-3 py-1 text-xl border rounded hover:bg-gray-100"
+        >
+          +
+        </button>
+      </div>
+
+      <div className="flex justify-center items-center gap-4">
+        <span className="text-sm">Mode:</span>
+        <button
+          onClick={toggleMode}
+          className={`px-4 py-2 rounded-full text-white font-semibold ${
+            mode === "BUY" ? "bg-green-500" : "bg-red-500"
+          }`}
+        >
+          {mode}
+        </button>
+      </div>
+
+      <button
+        onClick={handleExecute}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-lg font-semibold"
+      >
+        Execute
+      </button>
+    </div>
+  );
+};
