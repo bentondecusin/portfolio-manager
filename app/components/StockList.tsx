@@ -8,27 +8,38 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button";
+
+const stocks = [
+    { symbol: 'AAPL', name: 'Apple Inc.', price: '$150.00' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc.', price: '$2800.00' },
+    { symbol: 'AMZN', name: 'Amazon.com Inc.', price: '$3400.00' },
+    { symbol: 'MSFT', name: 'Microsoft Corporation', price: '$299.00' }
+];
 
 const StockList = () => {
     return (
         <div>
             <Table>
-                <TableCaption>A list of your recent invoices.</TableCaption>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[100px]">Invoice</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="w-[100px]">Symbol</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead className="text-right"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow>
-                        <TableCell className="font-medium">INV001</TableCell>
-                        <TableCell>Paid</TableCell>
-                        <TableCell>Credit Card</TableCell>
-                        <TableCell className="text-right">$250.00</TableCell>
-                    </TableRow>
+                    {stocks.map((stock) => (
+                        <TableRow key={stock.symbol}>
+                            <TableCell className="font-medium">{stock.symbol}</TableCell>
+                            <TableCell>{stock.name}</TableCell>
+                            <TableCell>{stock.price}</TableCell>
+                            <TableCell className="text-right">
+                                <Button>Trade</Button>
+                            </TableCell>
+                        </TableRow>
+                    ))}
                 </TableBody>
             </Table>
         </div>
