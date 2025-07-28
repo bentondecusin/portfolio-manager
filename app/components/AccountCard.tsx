@@ -12,18 +12,21 @@ import {
 const AccountCard = () => {
     return (
         <>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Card Title</CardTitle>
-                    <CardDescription>Card Description</CardDescription>
-                    <CardAction>Card Action</CardAction>
+            <Card className='p-2'>
+                <CardHeader className='pb-1'>
+                    <CardTitle className='font-semi-bold text-5xl mt-4'>Jhon Doe</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <p>Card Content</p>
+                <CardContent className='flex gap-3 py-2'>
+                    <div className='flex flex-col w-1/2'>
+                        <p className='font-semi-bold text-4xl'>Value</p>
+                        <CardDescription className='text-xl'>$1000</CardDescription>
+                    </div>
+                    <div className='flex flex-col w-1/2'>
+                        <p className='font-semi-bold text-4xl'>Balance</p>
+                        <CardDescription className='text-xl'>$200</CardDescription>
+                    </div>
                 </CardContent>
-                <CardFooter>
-                    <p>Card Footer</p>
-                </CardFooter>
+                
             </Card>
         </>
     )
