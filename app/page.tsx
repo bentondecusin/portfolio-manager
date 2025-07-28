@@ -1,11 +1,13 @@
 import StockList from "./components/StockList";
 import PriceTrend from "./components/PriceTrend";
 import PortfolioList from "./components/PortfolioList";
+import Navbar from "./components/Navbar";
 
 
 export default function Home() {
   return (
     <div>
+      <Navbar/>
       <div className="container mx-auto p-4 flex">
         <div className="w-1/2 pr-2">
           <PriceTrend />
