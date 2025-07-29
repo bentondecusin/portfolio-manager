@@ -10,21 +10,21 @@ import {
 import TableWrapper from "../table_wrapper";
 
 type Transaction = {
-    id: string,
-    symbol: string,
-    tick_name: string,
-    txn_type: string,
-    quantity: string,
-    price: string,
-    txn_ts: string
+  id: string;
+  symbol: string;
+  tick_name: string;
+  txn_type: string;
+  quantity: string;
+  price: string;
+  txn_ts: string;
 };
 
 type Holding = {
-    symbol: string,
-    tick_name: string,
-    totalShares: number,
-    lastPrice: number,
-    totalValue: number
+  symbol: string;
+  tick_name: string;
+  totalShares: number;
+  lastPrice: number;
+  totalValue: number;
 };
 
 const PortfolioList = () => {
@@ -35,11 +35,11 @@ const PortfolioList = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const res = await fetch('http://localhost:8080/transactions');
+        const res = await fetch("/api/transactions");
         const data = await res.json();
         setTransactions(data);
       } catch (error) {
-        console.error('Failed to fetch transactions:', error);
+        console.error("Failed to fetch transactions:", error);
       } finally {
         setLoading(false);
       }
@@ -56,7 +56,7 @@ const PortfolioList = () => {
         const symbol = transaction.symbol;
         const quantity = parseFloat(transaction.quantity);
         const price = parseFloat(transaction.price);
-        const isBuy = transaction.txn_type === 'Buy';
+        const isBuy = transaction.txn_type === "Buy";
 
         if (!holdingsMap.has(symbol)) {
           holdingsMap.set(symbol, {
@@ -64,7 +64,7 @@ const PortfolioList = () => {
             tick_name: transaction.tick_name,
             totalShares: 0,
             lastPrice: price,
-            totalValue: 0
+            totalValue: 0,
           });
         }
 
@@ -81,7 +81,7 @@ const PortfolioList = () => {
       });
 
       const finalHoldings = Array.from(holdingsMap.values())
-        .filter(holding => holding.totalShares > 0)
+        .filter((holding) => holding.totalShares > 0)
         .sort((a, b) => b.totalValue - a.totalValue);
 
       setHoldings(finalHoldings);
