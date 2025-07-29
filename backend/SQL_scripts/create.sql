@@ -1,78 +1,23 @@
-CREATE DATABASE IF NOT EXISTS portfolio;
-USE portfolio;
+CREATE DATABASE IF NOT EXISTS DB_portfolio;
+USE DB_portfolio;
 
 -- House‑keeping --
 SET @OLD_FOREIGN_KEY_CHECKS = @@FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Drop existing objects (if any) --
-DROP TABLE IF EXISTS portfolio_snapshot;
-DROP TABLE IF EXISTS price_eod;
-DROP TABLE IF EXISTS price_tick;
-DROP TABLE IF EXISTS transaction;
-DROP TABLE IF EXISTS holding;
-DROP TABLE IF EXISTS asset;
-
--- Core reference table --
-CREATE TABLE IF NOT EXISTS asset (
-  id        BIGINT PRIMARY KEY AUTO_INCREMENT,
-  symbol    VARCHAR(16)  NOT NULL UNIQUE,
-  name      VARCHAR(64)  NOT NULL,
-  type      ENUM ('STOCK','BOND','CASH','ETF','CRYPTO') NOT NULL,
-  currency  CHAR(3)      NOT NULL DEFAULT 'USD'
-) ENGINE = InnoDB;
-
--- Current positions --
-CREATE TABLE IF NOT EXISTS holding (
-  id          BIGINT PRIMARY KEY AUTO_INCREMENT,
-  asset_id    BIGINT       NOT NULL,
-  quantity    DECIMAL(20,6) NOT NULL,
-  avg_cost    DECIMAL(18,4) NOT NULL,      -- price per unit
-  opened_ts   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_holding_asset FOREIGN KEY (asset_id) REFERENCES asset(id)
-) ENGINE = InnoDB;
+DROP TABLE IF EXISTS transactions;
 
 -- Immutable transaction ledger --
-CREATE TABLE IF NOT EXISTS transaction (
-  id        BIGINT PRIMARY KEY AUTO_INCREMENT,
-  asset_id  BIGINT       NOT NULL,
-  txn_type  ENUM('BUY','SELL','DEPOSIT','WITHDRAW') NOT NULL,
-  quantity  DECIMAL(20,6) NOT NULL,
-  price     DECIMAL(18,4) NOT NULL,         -- unit price or cash amount
-  txn_ts    DATETIME     NOT NULL,
-  CONSTRAINT fk_txn_asset FOREIGN KEY (asset_id) REFERENCES asset(id),
-  INDEX idx_txn_asset_ts (asset_id, txn_ts)
-) ENGINE = InnoDB;
-
---  Intraday quotes (tick/minute bars) --
-CREATE TABLE IF NOT EXISTS price_tick (
-  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-  asset_id   BIGINT      NOT NULL,
-  price_ts   DATETIME    NOT NULL,
-  last_price DECIMAL(18,4) NOT NULL,
-  source     VARCHAR(32) NOT NULL DEFAULT 'iex',
-  CONSTRAINT fk_tick_asset FOREIGN KEY (asset_id) REFERENCES asset(id),
-  INDEX idx_tick_asset_ts (asset_id, price_ts)
-) ENGINE = InnoDB;
-
--- End‑of‑day close prices --
-CREATE TABLE IF NOT EXISTS price_eod (
-  asset_id    BIGINT      NOT NULL,
-  price_date  DATE        NOT NULL,
-  close_price DECIMAL(18,4) NOT NULL,
-  PRIMARY KEY (asset_id, price_date),
-  CONSTRAINT fk_eod_asset FOREIGN KEY (asset_id) REFERENCES asset(id)
-) ENGINE = InnoDB;
-
--- Cached portfolio valuations (optional) --
-CREATE TABLE IF NOT EXISTS portfolio_snapshot (
-  snapshot_ts DATETIME PRIMARY KEY,
-  total_value DECIMAL(20,2) NOT NULL,
-  total_cost  DECIMAL(20,2) NOT NULL,
-  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB;
+CREATE TABLE IF NOT EXISTS transactions (
+  id       BIGINT PRIMARY KEY AUTO_INCREMENT,
+  symbol   VARCHAR(16)  NOT NULL,
+  tick_name VARCHAR(64) NOT NULL,           -- pulled from yfinance at insert time
+  txn_type VARCHAR(10) NOT NULL, -- 'Buy' or 'Sell'
+  quantity DECIMAL NOT NULL,          -- shares
+  price    DECIMAL NOT NULL,          -- execution price
+  txn_ts   DATETIME      NOT NULL,
+  INDEX idx_symbol_ts (symbol, txn_ts)      -- fast range & aggregation queries
+) ENGINE=InnoDB;
 
 -- Restore FK checks --
 SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
@@ -80,77 +25,46 @@ SET FOREIGN_KEY_CHECKS = @OLD_FOREIGN_KEY_CHECKS;
 -- #####################################################################
 -- Seed (dummy) data – small realistic sample
 -- #####################################################################
-INSERT IGNORE INTO asset (symbol, name, type, currency) VALUES
-  ('AAPL', 'Apple Inc.', 'STOCK', 'USD'),
-  ('MSFT', 'Microsoft Corp.', 'STOCK', 'USD'),
-  ('BND',  'Vanguard Total Bond ETF', 'BOND', 'USD'),
-  ('CASH', 'US Dollars', 'CASH', 'USD');
+INSERT INTO transactions
+        (symbol, tick_name, txn_type, quantity, price,  txn_ts)
+VALUES
+  -- AAPL — two buys, one sell
+  ('AAPL',  'Apple Inc.',            'Buy',  25, 172.45, '2025-06-03 14:31:00'),
+  ('AAPL',  'Apple Inc.',            'Buy',  10, 180.10, '2025-06-21 15:05:00'),
+  ('AAPL',  'Apple Inc.',            'Sell',  5, 189.50, '2025-07-10 10:42:00'),
 
--- 🇸🇬  Assume script run on 2025‑07‑29 SGT 10:00 → 2025‑07‑29 02:00 UTC
+  -- MSFT
+  ('MSFT',  'Microsoft Corporation', 'Buy',  18, 415.80, '2025-06-05 09:45:00'),
+  ('MSFT',  'Microsoft Corporation', 'Buy',  12, 428.20, '2025-07-02 13:20:00'),
 
--- Holdings
-INSERT IGNORE INTO holding (asset_id, quantity, avg_cost, opened_ts)
-SELECT id, qty, cost, '2024-10-01 14:30:00' -- same opened date for demo
-FROM (
-  SELECT 'AAPL' sym, 50.000000 qty, 145.80 cost
-  UNION ALL SELECT 'MSFT', 30.000000, 320.00
-  UNION ALL SELECT 'BND', 100.000000, 75.00
-  UNION ALL SELECT 'CASH', 5000.000000, 1.00
-) AS seed
-JOIN asset a ON a.symbol = seed.sym;
+  -- NVDA
+  ('NVDA',  'NVIDIA Corporation',    'Buy',  6,  123.70, '2025-06-07 11:15:00'),
+  ('NVDA',  'NVIDIA Corporation',    'Sell', 2,  138.95, '2025-07-15 14:10:00'),
 
--- Transactions (all BUYs to match holdings)
-INSERT IGNORE INTO transaction (asset_id, txn_type, quantity, price, txn_ts)
-SELECT id, 'BUY', qty, cost, '2024-10-01 14:30:00'
-FROM (
-  SELECT 'AAPL' sym, 50.000000 qty, 145.80 cost
-  UNION ALL SELECT 'MSFT', 30.000000, 320.00
-  UNION ALL SELECT 'BND', 100.000000, 75.00
-) tx
-JOIN asset a ON a.symbol = tx.sym;
+  -- AMZN
+  ('AMZN',  'Amazon.com Inc.',       'Buy',  4,  184.30, '2025-06-10 10:00:00'),
+  ('AMZN',  'Amazon.com Inc.',       'Buy',  3,  192.15, '2025-07-01 16:25:00'),
+  ('AMZN',  'Amazon.com Inc.',       'Sell', 1,  199.40, '2025-07-18 11:08:00'),
 
--- Latest intraday ticks (2025‑07‑28 13:45:00 UTC)
-INSERT IGNORE INTO price_tick (asset_id, price_ts, last_price)
-SELECT id, '2025-07-28 13:45:00', price
-FROM (
-  SELECT 'AAPL' sym, 198.12 price
-  UNION ALL SELECT 'MSFT', 410.55
-  UNION ALL SELECT 'BND', 74.88
-  UNION ALL SELECT 'CASH', 1.00
-) p
-JOIN asset a ON a.symbol = p.sym;
+  -- GOOGL
+  ('GOOGL', 'Alphabet Inc.-Class A', 'Buy',  7,  145.60, '2025-06-12 14:55:00'),
+  ('GOOGL', 'Alphabet Inc.-Class A', 'Buy',  5,  151.25, '2025-06-28 09:37:00'),
 
--- Previous EOD close (2025‑07‑27)
-INSERT IGNORE INTO price_eod (asset_id, price_date, close_price)
-SELECT id, '2025-07-27', price
-FROM (
-  SELECT 'AAPL' sym, 196.00 price
-  UNION ALL SELECT 'MSFT', 405.70
-  UNION ALL SELECT 'BND', 74.80
-  UNION ALL SELECT 'CASH', 1.00
-) q
-JOIN asset a ON a.symbol = q.sym;
+  -- TSLA
+  ('TSLA',  'Tesla Inc.',            'Buy',  8,  242.80, '2025-06-15 15:12:00'),
+  ('TSLA',  'Tesla Inc.',            'Sell', 3,  256.75, '2025-07-12 10:50:00'),
 
--- Portfolio snapshot for 2025‑07‑27 22:00 UTC
-INSERT IGNORE INTO portfolio_snapshot (snapshot_ts, total_value, total_cost)
-VALUES ('2025-07-27 22:00:00', 125432.55, 116900.00);
+  -- JPM
+  ('JPM',   'JPMorgan Chase & Co.',  'Buy',  20, 195.10, '2025-06-18 13:03:00'),
+  ('JPM',   'JPMorgan Chase & Co.',  'Buy',  15, 199.25, '2025-07-03 12:44:00'),
 
--- #####################################################################
--- Verification helpers -------------------------------------------------
--- View: live market value per holding (using latest tick)
-DROP VIEW IF EXISTS v_holding_live;
-CREATE VIEW v_holding_live AS
-SELECT h.id AS holding_id,
-       a.symbol,
-       h.quantity,
-       h.avg_cost,
-       t.last_price AS market_price,
-       (h.quantity * t.last_price) AS market_value,
-       ROUND(((t.last_price - h.avg_cost) / h.avg_cost) * 100, 2) AS return_pct
-FROM holding h
-JOIN asset a        ON a.id = h.asset_id
-JOIN price_tick t   ON t.asset_id = h.asset_id
-WHERE t.price_ts = (SELECT MAX(price_ts) FROM price_tick WHERE asset_id = h.asset_id);
+  -- NFLX
+  ('NFLX',  'Netflix Inc.',          'Buy',   5, 649.50, '2025-06-20 11:28:00'),
+  ('NFLX',  'Netflix Inc.',          'Sell',  2, 678.85, '2025-07-14 09:59:00'),
+
+  -- Extra diversity
+  ('KO',    'Coca-Cola Company',     'Buy',  30, 63.40,  '2025-06-24 14:17:00'),
+  ('KO',    'Coca-Cola Company',     'Sell', 10, 67.05,  '2025-07-09 15:33:00');
 
 -- Quick sanity query
 -- SELECT * FROM v_holding_live ORDER BY market_value DESC;

@@ -1,18 +1,20 @@
 const db = require('../db');
 
-async function getAllTransactions() {
-  const [rows] = await db.query("SELECT * FROM transaction");
+async function listAll() {
+  const [rows] = await db.query('SELECT * FROM transactions');
   return rows;
 }
 
-async function createTransaction(txn) {
-  const { assetId, txnType, quantity, price, txnTs } = txn;
+async function create(txn) {
+  const { symbol, tickName, txnType, quantity, price, txnTs } = txn;
+
   const [res] = await db.query(
-    `INSERT INTO transaction (asset_id, txn_type, quantity, price, txn_ts)
-     VALUES (?, ?, ?, ?, ?)`,
-    [assetId, txnType, quantity, price, txnTs]
+    `INSERT INTO transactions
+       (symbol, tick_name, txn_type, quantity, price, txn_ts)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [symbol, tickName, txnType, quantity, price, txnTs]
   );
   return { id: res.insertId, ...txn };
 }
 
-module.exports = { getAllTransactions, createTransaction };
+module.exports = { create, listAll };
