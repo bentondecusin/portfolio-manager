@@ -28,7 +28,7 @@ const TransactionHistory = () => {
       try {
         const res = await fetch('http://localhost:8080/transactions');
         let data = await res.json();
-        // 按时间降序（最新在前）
+
         data = data.sort((a, b) => new Date(b.txn_ts).getTime() - new Date(a.txn_ts).getTime());
         setTransactions(data);
       } catch (error) {

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/BACKEND/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -41,3 +42,5 @@ yarn-error.log*
 next-env.d.ts
 backend/node_modules
 transactions.csv
+
+backend/node_modules
