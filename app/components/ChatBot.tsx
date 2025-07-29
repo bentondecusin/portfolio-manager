@@ -2,17 +2,36 @@ import React from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageCircle, X } from 'lucide-react'
+import { GoogleGenAI, Type } from '@google/genai'
+import { param } from 'framer-motion/client'
+
+const ai = new GoogleGenAI({});
+
+// Define the function declaration for the model
+const getStockQuote = {
+    name: 'getStockQuote', // TODO: update this to match api call
+    description: 'Get stock quote for a given symbol',
+    paramaters: {
+        type: Type.OBJECT,
+        properties: {
+            symbol: {
+                type: Type.STRING,
+                description: 'The stock symbol to get the quote for',
+            }
+        }
+    }
+}
 
 // Define the Role enum
 enum Role {
-  USER = 'user',
-  AI = 'ai'
+    USER = 'user',
+    AI = 'ai'
 }
 
 interface Message {
-  text: string
-  role: Role
-  timestamp: number
+    text: string
+    role: Role
+    timestamp: number
 }
 
 const ChatBot = () => {
@@ -20,7 +39,7 @@ const ChatBot = () => {
     const [isChatBotOpen, setIsChatBotOpen] = React.useState(false)
     const [messages, setMessages] = React.useState<Message[]>([
         {
-            text: "Hello! I'm your financial assistant. I can help you with stock information, portfolio management, and trading advice. How can I assist you today?",
+            text: "Hello! I'm your financial assistant. How can I assist you today?",
             role: Role.AI,
             timestamp: Date.now()
         }
@@ -36,29 +55,28 @@ const ChatBot = () => {
     }
 
     const generateAIResponse = (userMessage: string): string => {
-        const lowerMessage = userMessage.toLowerCase()
-        
-        if (lowerMessage.includes('stock') || lowerMessage.includes('price')) {
-            return "I can help you with stock information! You can ask me about specific stock prices, trends, or market analysis. What stock are you interested in?"
-        }
-        
-        if (lowerMessage.includes('portfolio')) {
-            return "I can assist with portfolio management! I can help you analyze your holdings, suggest diversification strategies, or discuss risk management. What would you like to know?"
-        }
-        
-        if (lowerMessage.includes('trade') || lowerMessage.includes('buy') || lowerMessage.includes('sell')) {
-            return "For trading questions, I can provide market insights and analysis. However, please remember that all trading decisions should be based on your own research and risk tolerance. What specific trading question do you have?"
-        }
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: userMessage,
+            config: {
+                tools: [{
+                    functionDeclarations: [getStockQuote]
+                }],
+            },
+        })
+        if (response.functionCalls && response.functionCalls.length > 0) {
+            const functionCall = response.functionCalls[0];
+            console.log(`Function to call: ${functionCall.name}`);
+            console.log(`Arguments: ${JSON.stringify(functionCall.args)}`);
 
-        if (lowerMessage.includes('aapl') || lowerMessage.includes('apple')) {
-            return "Apple (AAPL) is one of the most popular stocks. It's known for its strong fundamentals and consistent performance. Would you like to know more about its current price or recent trends?"
+            if (functionCall.name === 'getStockQuote') {
+                const { symbol } = functionCall.args;
+                getStockQuote(symbol)
+            }
+        } else {
+            console.log("No function call found in the response.");
+            console.log(response.text);
         }
-
-        if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-            return "Hello! I'm here to help with your financial questions. Feel free to ask about stocks, trading, or portfolio management!"
-        }
-        
-        return "I'm here to help with your financial questions! You can ask me about stocks, portfolio management, market trends, or trading strategies. How can I assist you?"
     }
 
     const handleSendMessage = async () => {
@@ -106,8 +124,8 @@ const ChatBot = () => {
                         </div>
                         <div className="h-[76%] flex flex-col overflow-y-auto gap-5 px-5 py-2 scroll-container">
                             {messages.map((message, index) => (
-                                <div 
-                                    key={index} 
+                                <div
+                                    key={index}
                                     className={`${message.role === Role.AI ? "self-start bg-sky-200" : "self-end bg-violet-200"} pb-5 px-5 py-2 rounded-md w-auto text-left max-w-[80%]`}
                                 >
                                     <p className="text-sm">{message.text}</p>
