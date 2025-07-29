@@ -26,7 +26,9 @@ const TopUp: React.FC<TopUpProps> = ({ amount, setAmount }) => {
     return (
         <div>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger><CircleDollarSign size={28} /></DialogTrigger>
+                <DialogTrigger>
+                    <CircleDollarSign size={28} color="#FFD700" />
+                </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Top Up Balance</DialogTitle>
