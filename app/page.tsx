@@ -13,6 +13,7 @@ export default function Home() {
   const [user, setUser] = useState({});
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
   const [trendSymbol, setTrendSymbol] = useState("AAPL");
+  const [amount, setAmount] = useState(0);
 
   return (
     <div>
@@ -28,7 +29,7 @@ export default function Home() {
       <Navbar />
       <div className="container mx-auto p-4 flex">
         <div className="w-1/2 pr-2 flex flex-col gap-4">
-          <AccountCard />
+          <AccountCard amount={amount} setAmount={setAmount} />
           <PriceTrend symbol={trendSymbol} />
         </div>
         <div className="w-1/2 pl-2">

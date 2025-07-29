@@ -8,13 +8,22 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import TopUp from './TopUpButton'
 
-const AccountCard = () => {
+interface AccountCardProps {
+    amount: string;
+    setAmount: (value: string) => void;
+}
+
+const AccountCard: React.FC<AccountCardProps> = ({ amount, setAmount }) => {
     return (
         <>
             <Card className='p-2'>
                 <CardHeader className='pb-1'>
-                    <CardTitle className='font-semi-bold text-5xl mt-4'>Jhon Doe</CardTitle>
+                    <div className='flex items-end justify-start mt-4 space-x-2'>
+                        <CardTitle className='font-semi-bold text-5xl'>Jhon Doe</CardTitle>
+                        <TopUp amount={amount} setAmount={setAmount} />
+                    </div>
                 </CardHeader>
                 <CardContent className='flex gap-3 py-2'>
                     <div className='flex flex-col w-1/2'>
@@ -23,7 +32,7 @@ const AccountCard = () => {
                     </div>
                     <div className='flex flex-col w-1/2'>
                         <p className='font-semi-bold text-4xl'>Balance</p>
-                        <CardDescription className='text-xl'>$200</CardDescription>
+                        <CardDescription className='text-xl'>${amount}</CardDescription>
                     </div>
                 </CardContent>
                 

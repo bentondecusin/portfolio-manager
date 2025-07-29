@@ -286,7 +286,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         {/* Candlestick Chart */}
         {!loading && !error && chartData.length > 0 && (
           <>
-            <div className="w-full h-[400px] mb-6 rounded-xl bg-muted/40 border shadow-inner flex items-center justify-center">
+            <div className="w-full h-[400px] mb-2 rounded-xl bg-muted/40 border shadow-inner flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={chartData}
@@ -383,7 +383,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
             </div>
 
             {/* Market Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
               <div className="text-center p-3 rounded-lg border bg-background shadow-sm">
                 <p className="text-xs text-muted-foreground mb-1">Open</p>
                 <p className="font-semibold text-lg">{formatPrice(chartData[chartData.length - 1].open)}</p>
