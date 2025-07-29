@@ -112,6 +112,8 @@ const AccountCard = () => {
     }
 
     return (
+        <div>
+            <h2>Account Card</h2>
         <Card className='p-2'>
             <div className='flex gap-4'>
                 <div className='flex-1'>
@@ -166,6 +168,7 @@ const AccountCard = () => {
                 </div>
             </div>
         </Card>
+    </div>
     )
 }
 

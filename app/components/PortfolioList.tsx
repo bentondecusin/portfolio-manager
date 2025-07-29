@@ -93,30 +93,33 @@ const PortfolioList = () => {
   }
 
   return (
-    <TableWrapper>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-1/5">Symbol</TableHead>
-            <TableHead className="w-1/5">Name</TableHead>
-            <TableHead className="w-1/5">Shares</TableHead>
-            <TableHead className="w-1/5">Price</TableHead>
-            <TableHead className="w-1/5">Total Value</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {holdings.map((holding) => (
-            <TableRow key={holding.symbol}>
-              <TableCell className="font-medium">{holding.symbol}</TableCell>
-              <TableCell>{holding.tick_name}</TableCell>
-              <TableCell>{holding.totalShares.toFixed(0)}</TableCell>
-              <TableCell>${holding.lastPrice.toFixed(2)}</TableCell>
-              <TableCell>${holding.totalValue.toFixed(2)}</TableCell>
+    <div>
+        <h2>Current Holding</h2>
+      <TableWrapper>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-1/5">Symbol</TableHead>
+              <TableHead className="w-1/5">Name</TableHead>
+              <TableHead className="w-1/5">Shares</TableHead>
+              <TableHead className="w-1/5">Price</TableHead>
+              <TableHead className="w-1/5">Total Value</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableWrapper>
+          </TableHeader>
+          <TableBody>
+            {holdings.map((holding) => (
+              <TableRow key={holding.symbol}>
+                <TableCell className="font-medium">{holding.symbol}</TableCell>
+                <TableCell>{holding.tick_name}</TableCell>
+                <TableCell>{holding.totalShares.toFixed(0)}</TableCell>
+                <TableCell>${holding.lastPrice.toFixed(2)}</TableCell>
+                <TableCell>${holding.totalValue.toFixed(2)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableWrapper>
+    </div>
   );
 };
 

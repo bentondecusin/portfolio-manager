@@ -7,6 +7,7 @@ import { useState } from "react";
 import TradeWindow from "./components/TradeWindow";
 import Navbar from "./components/Navbar";
 import AccountCard from "./components/AccountCard";
+import TransactionHistory from "./components/TransactionHistory";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,7 +41,12 @@ export default function Home() {
         </div>
       </div>
       <div className="container mx-auto p-4">
-        <PortfolioList />
+        <div className="gap-4">
+          <PortfolioList />
+        </div>
+        <div className="gap-4">
+          <TransactionHistory/>
+        </div>
       </div>
     </div>
   );

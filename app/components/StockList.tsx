@@ -43,7 +43,7 @@ const TradeButton = ({ setIsModalOpen, setPreTradeSymbol, symbol }) => {
 };
 const StockList = ({ setIsModalOpen, setTrendSymbol, setPreTradeSymbol }) => {
   const { data, error, isLoading } = useSWR("/api/assets", fetcher);
-  let mkt_prix = data;
+
   if (error) console.error(error);
   return (
     <div>
@@ -63,7 +63,7 @@ const StockList = ({ setIsModalOpen, setTrendSymbol, setPreTradeSymbol }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mkt_prix.map((stock, idx) => (
+              {data.map((stock, idx) => (
                 <TableRow key={idx + stock.symbol}>
                   <TableCell className="font-medium">{stock.symbol}</TableCell>
                   <TableCell>{stock.name}</TableCell>
