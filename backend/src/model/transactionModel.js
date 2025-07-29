@@ -1,7 +1,8 @@
 const db = require('../db');
 
 async function listAll() {
-  const [rows] = await db.query('SELECT * FROM transactions');
+  let sql = 'SELECT * FROM transactions';
+  const [rows] = await db.query(sql);
   return rows;
 }
 

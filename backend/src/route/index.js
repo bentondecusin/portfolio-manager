@@ -1,8 +1,8 @@
 const express = require('express');
-const cors    = require('cors');
+const cors = require('cors');
 
-const portfolioRoute = require('../route/portfolioRoute');
-const assetRoute     = require('../route/assetRoute');
+const assetRoute = require('../route/assetRoute');
+const transactionRoute = require('../route/transactionRoute');
 
 const app = express();
 
@@ -11,8 +11,8 @@ app.use(cors());
 app.use(express.json());
 
 // Mount routes
-app.use('/portfolio', portfolioRoute);
-app.use('/assets',    assetRoute);
+app.use('/transactions', transactionRoute);
+app.use('/assets', assetRoute);
 
 // Fallback for undefined routes (optional)
 app.use((req, res) => {
