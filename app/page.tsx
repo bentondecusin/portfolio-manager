@@ -31,7 +31,7 @@ export default function Home() {
           <AccountCard />
           <PriceTrend symbol={trendSymbol} />
         </div>
-        <div className="w-1/2 pl-2">
+        <div className="w-1/2 h-1/3 pl-2">
           <StockList
             setIsModalOpen={setIsModalOpen}
             setTrendSymbol={setTrendSymbol}
