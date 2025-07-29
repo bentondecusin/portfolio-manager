@@ -1,11 +1,10 @@
 // src/route/assetRoute.js
-
 const express = require('express');
 const router  = express.Router();
 const ctrl    = require('../controller/assetController');
 
 // Live quote
-router.get('/:symbol/live',    ctrl.getAssetLive);
+router.get('/:symbol/live', ctrl.getAssetLive);
 
 // Historical data (Alpha Vantage)
 // Examples:
