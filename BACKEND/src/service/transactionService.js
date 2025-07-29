@@ -1,7 +1,7 @@
 const txnModel = require('../model/transactionModel');
 
 async function getTxnHistory() {
-    const txn_list = await txnModel.getAllTransactions();
+    const txn_list = await txnModel.listAll();
     return txn_list;
 }
 
