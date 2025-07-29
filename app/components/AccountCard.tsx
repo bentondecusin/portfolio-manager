@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
 } from "../../components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Label } from 'recharts'
 
 type Transaction = {
     id: string,
@@ -81,11 +81,13 @@ const AccountCard = () => {
                 .filter(holding => holding.totalShares > 0)
                 .sort((a, b) => b.totalValue - a.totalValue);
             setHoldings(finalHoldings);
+
+            console.log(finalHoldings)
         }
     }, [transactions]);
 
     const pieData = holdings.map((holding, index) => ({
-        name: holding.symbol,
+        symbol: holding.symbol,
         value: holding.totalValue,
         color: COLORS[index % COLORS.length]
     }));
@@ -94,81 +96,103 @@ const AccountCard = () => {
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
-            const holding = holdings.find(h => h.symbol === payload[0].name);
+            console.log('payload[0]:', payload[0]);
+            const symbol = payload[0].name;
+            const holding = holdings.find(h => String(h.symbol) === String(symbol));
+            console.log('symbol:', symbol, 'holding:', holding);
             return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                    <p className="font-medium">{`${payload[0].name}`}</p>
-                    <p className="text-sm text-gray-600">{`Shares: ${holding?.totalShares.toFixed(0)}`}</p>
-                    <p className="text-sm text-gray-600">{`Price: $${holding?.lastPrice.toFixed(2)}`}</p>
-                    <p className="text-sm text-gray-600">{`Value: $${payload[0].value.toFixed(2)}`}</p>
+                    <p className="font-medium">Symbol: {holding?.symbol || symbol}</p>
+                    <p className="text-sm text-gray-600">Shares: {holding ? holding.totalShares.toFixed(0) : "-"}</p>
+                    <p className="text-sm text-gray-600">Price: ${holding ? holding.lastPrice.toFixed(2) : "-"}</p>
                 </div>
-            )
+            );
         }
-        return null
+        return null;
     };
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
+    // if (loading) {
+    //     return <div>Loading...</div>;
+    // }
 
     return (
-        <div>
-            <h2>Account Card</h2>
+        
         <Card className='p-2'>
-            <div className='flex gap-4'>
-                <div className='flex-1'>
+            <div className='flex gap-4 min-h-[180px]'>
+                <div className='flex-1 flex flex-col justify-end h-[180px]'>
                     <CardHeader className='pb-1'>
                         <CardTitle className='font-semi-bold text-5xl mt-4'>John Doe</CardTitle>
                     </CardHeader>
-                    <CardContent className='flex gap-3 py-2'>
-                        <div className='flex flex-col w-1/2'>
-                            <p className='font-semi-bold text-4xl'>Value</p>
-                            <CardDescription className='text-xl'>${totalPortfolioValue.toFixed(2)}</CardDescription>
+                    <CardContent className="flex gap-3 py-2 justify-between items-end min-h-[90px]">
+                        <div className="flex flex-col w-1/2 h-full justify-end">
+                            <p className="font-semi-bold text-4xl">Return</p>
+                            <CardDescription className="text-xl">$30000</CardDescription>
                         </div>
-                        <div className='flex flex-col w-1/2'>
-                            <p className='font-semi-bold text-4xl'>Balance</p>
-                            <CardDescription className='text-xl'>$10000</CardDescription>
+                        <div className="flex flex-col w-1/2 h-full justify-end">
+                            <p className="font-semi-bold text-4xl">Balance</p>
+                            <CardDescription className="text-xl">$10000</CardDescription>
                         </div>
                     </CardContent>
                 </div>
                 {/* Pie Chart */}
-                <div className='flex-1'>
-                    <CardContent className='pt-4'>
-                        <h3 className="text-lg font-semibold mb-2 text-center">Portfolio Distribution</h3>
-                        {pieData.length > 0 ? (
-                            <div className="h-[180px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={pieData}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            outerRadius={80}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                        >
-                                            {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip content={<CustomTooltip />} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        ) : (
-                            <div className="h-[180px] flex items-center justify-center">
-                                <div className="text-center">
-                                    <div className="w-32 h-32 rounded-full border-4 border-gray-200 mx-auto mb-4"></div>
-                                    <p className="text-gray-500 text-lg">No Holdings</p>
-                                </div>
-                            </div>
-                        )}
+                <div className='flex-1 h-[180px]'>
+                    <CardContent className="pt-4 flex-1">
+                        <div className="relative h-[180px] w-full flex items-center justify-center">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        dataKey="value"
+                                        nameKey="symbol"
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={50}
+                                        outerRadius={80}
+                                        strokeWidth={5}
+                                    >
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                        <Label
+                                            content={({ viewBox }) => {
+                                                if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                    return (
+                                                        <text
+                                                            x={viewBox.cx}
+                                                            y={viewBox.cy}
+                                                            textAnchor="middle"
+                                                            dominantBaseline="middle"
+                                                        >
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={viewBox.cy}
+                                                                className="fill-foreground text-2xl font-bold"
+                                                            >
+                                                                ${totalPortfolioValue.toLocaleString()}
+                                                            </tspan>
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={(viewBox.cy || 0) + 20}
+                                                                className="fill-muted-foreground text-xxs"
+                                                            >
+                                                                Value
+                                                            </tspan>
+                                                        </text>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                    </Pie>
+                                    <Tooltip content={<CustomTooltip />} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
                     </CardContent>
                 </div>
             </div>
         </Card>
-    </div>
+  
     )
 }
 

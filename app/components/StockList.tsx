@@ -47,7 +47,7 @@ const StockList = ({ setIsModalOpen, setTrendSymbol, setPreTradeSymbol }) => {
   if (error) console.error(error);
   return (
     <div>
-      <h2>Market Watchlist</h2>
+
       {isLoading && <div>Loading</div>}
       {data && (
         <TableWrapper>

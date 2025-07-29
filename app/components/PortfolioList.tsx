@@ -92,6 +92,31 @@ const PortfolioList = () => {
     return <div>Loading...</div>;
   }
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const symbol = payload[0].name;
+      // 找到该 symbol 的所有交易，按时间降序
+      const symbolTxns = transactions
+        .filter((t) => t.symbol === symbol)
+        .sort((a, b) => new Date(b.txn_ts).getTime() - new Date(a.txn_ts).getTime());
+      const latestTxn = symbolTxns[0];
+      // 计算 shares（可选：可用 holdings 里的 totalShares，或遍历 symbolTxns 计算）
+      const holding = holdings.find((h) => h.symbol === symbol);
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="font-medium">Symbol: {symbol}</p>
+          <p className="text-sm text-gray-600">
+            Shares: {holding ? holding.totalShares.toFixed(0) : "-"}
+          </p>
+          <p className="text-sm text-gray-600">
+            Price: ${latestTxn ? parseFloat(latestTxn.price).toFixed(2) : "-"}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div>
         <h2>Current Holding</h2>

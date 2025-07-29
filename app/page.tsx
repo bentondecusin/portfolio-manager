@@ -3,6 +3,7 @@
 import StockList from "./components/StockList";
 import PriceTrend from "./components/PriceTrend";
 import PortfolioList from "./components/PortfolioList";
+import TransactionList from './components/TransactionList'
 import { useState } from "react";
 import TradeWindow from "./components/TradeWindow";
 import Navbar from "./components/Navbar";
@@ -40,13 +41,12 @@ export default function Home() {
           />
         </div>
       </div>
-      <div className="container mx-auto p-4">
-        <div className="gap-4">
-          <PortfolioList />
-        </div>
-        <div className="gap-4">
-          <TransactionHistory/>
-        </div>
+      <div className="container mx-auto p-8">
+        <h2 className="text-3xl font-bold mb-6">Current Holding</h2>
+        <PortfolioList />
+        <div className="my-12" />
+        <h2 className="text-3xl font-bold mb-6">Transaction History</h2>
+        <TransactionList />
       </div>
     </div>
   );
