@@ -3,6 +3,7 @@ const cors = require('cors');
 
 const assetRoute = require('./assetRoute');
 const transactionRoute = require('./transactionRoute');
+const aiRoute = require('./aiRoute');
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 // Mount routes
 app.use('/transactions', transactionRoute);
 app.use('/assets', assetRoute);
+app.use('/ai', aiRoute);
 
 // Fallback for undefined routes (optional)
 app.use((req, res) => {

@@ -2,27 +2,7 @@ import React from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageCircle, X } from 'lucide-react'
-import { GoogleGenAI, Type } from '@google/genai'
-import { param } from 'framer-motion/client'
 
-const ai = new GoogleGenAI({});
-
-// Define the function declaration for the model
-const getStockQuote = {
-    name: 'getStockQuote', // TODO: update this to match api call
-    description: 'Get stock quote for a given symbol',
-    paramaters: {
-        type: Type.OBJECT,
-        properties: {
-            symbol: {
-                type: Type.STRING,
-                description: 'The stock symbol to get the quote for',
-            }
-        }
-    }
-}
-
-// Define the Role enum
 enum Role {
     USER = 'user',
     AI = 'ai'
@@ -54,30 +34,7 @@ const ChatBot = () => {
         setIsChatBotOpen(!isChatBotOpen)
     }
 
-    const generateAIResponse = (userMessage: string): string => {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: userMessage,
-            config: {
-                tools: [{
-                    functionDeclarations: [getStockQuote]
-                }],
-            },
-        })
-        if (response.functionCalls && response.functionCalls.length > 0) {
-            const functionCall = response.functionCalls[0];
-            console.log(`Function to call: ${functionCall.name}`);
-            console.log(`Arguments: ${JSON.stringify(functionCall.args)}`);
-
-            if (functionCall.name === 'getStockQuote') {
-                const { symbol } = functionCall.args;
-                getStockQuote(symbol)
-            }
-        } else {
-            console.log("No function call found in the response.");
-            console.log(response.text);
-        }
-    }
+    
 
     const handleSendMessage = async () => {
         if (inputValue.trim()) {
@@ -95,7 +52,7 @@ const ChatBot = () => {
             // Simulate AI response delay
             setTimeout(() => {
                 const aiResponse: Message = {
-                    text: generateAIResponse(inputValue),
+                    text: `You said: "${userMessage.text}". How can I help you further?`,
                     role: Role.AI,
                     timestamp: Date.now()
                 }
