@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import db from '../../../db_test'
+import db from '../../../db'
 
 interface Asset {
   symbol: string
