@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { error } from "console";
 
@@ -10,14 +10,12 @@ interface Asset {
   class: string;
 }
 
-// GET /api/assets/:symbol
-export async function GET(
-  request: Request,
-  { params }: { params: { symbol: string } }
-) {
+// GET /api/holdings/:cash
+export async function GET(request: NextRequest, params: { symbol: string }) {
   try {
     params = await params;
     const sym = params!.symbol!.toUpperCase();
+    return NextResponse.json({ symbol: params.symbol, amount: 1000 });
     const sql = process.env.DATABASE_URL && neon(process.env.DATABASE_URL);
     if (!sql) throw error("failed to connect to neon");
     const [row] = await sql.query(
@@ -43,30 +41,6 @@ export async function GET(
     return NextResponse.json(formatted);
   } catch (err) {
     console.error("Error fetching asset by symbol:", err);
-    return NextResponse.json({ error: "Database error" }, { status: 500 });
-  }
-}
-
-// DELETE /api/assets/:symbol
-export async function DELETE(
-  request: Request,
-  { params }: { params: { symbol: string } }
-) {
-  try {
-    const sym = params.symbol.toUpperCase();
-    const [result] = await db.query(`DELETE FROM assets WHERE symbol = ?`, [
-      sym,
-    ]);
-
-    if ((result as any).affectedRows === 0) {
-      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      message: `Deleted asset(s) with symbol ${sym}`,
-    });
-  } catch (err) {
-    console.error("Error deleting asset:", err);
     return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 }
