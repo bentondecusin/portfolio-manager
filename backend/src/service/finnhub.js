@@ -75,6 +75,29 @@ class FinnhubAPI {
   async getAllSymbols() {
     return this.request('/stock/symbol', { exchange: 'US' });
   }
+
+  /**
+   * Get historical candlestick data for a specific stock.
+   * @param {string} symbol - The stock symbol (e.g., "AAPL").
+   * @param {string} resolution - The resolution of the data (e.g., "1", "5", "15", "30", "60", "D", "W", "M").
+   * @param {Date|number} from - The start date (UNIX timestamp or Date object).
+   * @param {Date|number} to - The end date (UNIX timestamp or Date object).
+   * @returns {Promise<Object>} - The candlestick data.
+   */
+  async getStockCandles(symbol, resolution, from, to) {
+    if (from instanceof Date) {
+      from = from.getTime();
+    }
+    if (to instanceof Date) {
+      to = to.getTime();
+    }
+    return this.request('/stock/candle', {
+      symbol,
+      resolution,
+      from,
+      to,
+    });
+  }
 }
 
 const finnhubAPI = new FinnhubAPI();
