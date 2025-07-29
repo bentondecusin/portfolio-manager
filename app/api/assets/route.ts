@@ -13,22 +13,30 @@ export async function GET(request: Request) {
   try {
     const sql = process.env.DATABASE_URL && neon(process.env.DATABASE_URL);
     if (!sql) throw error("failed to connect to neon");
-
     let query = `
       SELECT *
       FROM assets a
     `;
-
     const rows = await sql.query(query);
-    console.log(rows);
-    const formatted: Asset[] = (rows as any[]).map((row) => ({
-      symbol: row.symbol,
-      name: row.name,
-      price: Number(row.price),
-      date: (row.date as Date).toISOString().split("T")[0],
-      class: row.class,
-    }));
-    return NextResponse.json(formatted);
+    const grouped = rows.reduce((acc, row) => {
+      const key = row.symbol;
+      if (!acc[key]) {
+        acc[key] = {
+          symbol: row.symbol,
+          name: row.name,
+          class: row.class,
+          history: [],
+        };
+      }
+
+      acc[key].history.push({
+        date: row.date.toISOString().split("T")[0], // or row.date if already a string
+        price: parseFloat(row.price),
+      });
+
+      return acc;
+    }, {});
+    return NextResponse.json(Object.values(grouped));
   } catch (err) {
     console.error("Error fetching assets:", err);
     return NextResponse.json({ error: "Database error" }, { status: 500 });

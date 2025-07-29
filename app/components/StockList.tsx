@@ -9,10 +9,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { symbol } from "framer-motion/client";
+import useSWR from "swr";
 import TableWrapper from "../table_wrapper";
 
-const stocks = [
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const temp: {
+  symbol: string;
+  name: string;
+  price: string;
+}[] = [
   { symbol: "AAPL", name: "Apple Inc.", price: "$150.00" },
   { symbol: "GOOGL", name: "Alphabet Inc.", price: "$2800.00" },
   { symbol: "AMZN", name: "Amazon.com Inc.", price: "$3400.00" },
@@ -37,38 +42,49 @@ const TradeButton = ({ setIsModalOpen, setPreTradeSymbol, symbol }) => {
   );
 };
 const StockList = ({ setIsModalOpen, setTrendSymbol, setPreTradeSymbol }) => {
+  const { data, error, isLoading } = useSWR("/api/assets", fetcher);
+  let mkt_prix = data;
+  if (error) console.error(error);
   return (
     <div>
       <h2>Market Watchlist</h2>
+      {isLoading && <div>Loading</div>}
+      {data && (
+        <TableWrapper>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Symbol</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Asset Class</TableHead>
 
-      <TableWrapper>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Symbol</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead className="text-right"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {stocks.map((stock, idx) => (
-              <TableRow key={idx + stock.symbol}>
-                <TableCell className="font-medium">{stock.symbol}</TableCell>
-                <TableCell>{stock.name}</TableCell>
-                <TableCell>{stock.price}</TableCell>
-                <TableCell className="text-right">
-                  <TradeButton
-                    symbol={stock.symbol}
-                    setIsModalOpen={setIsModalOpen}
-                    setPreTradeSymbol={setPreTradeSymbol}
-                  ></TradeButton>
-                </TableCell>
+                <TableHead>Market Price</TableHead>
+                <TableHead className="text-right"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableWrapper>
+            </TableHeader>
+            <TableBody>
+              {mkt_prix.map((stock, idx) => (
+                <TableRow key={idx + stock.symbol}>
+                  <TableCell className="font-medium">{stock.symbol}</TableCell>
+                  <TableCell>{stock.name}</TableCell>
+                  <TableCell>{stock.class}</TableCell>
+
+                  <TableCell>
+                    {stock.history[stock.history.length - 1].price}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <TradeButton
+                      symbol={stock.symbol}
+                      setIsModalOpen={setIsModalOpen}
+                      setPreTradeSymbol={setPreTradeSymbol}
+                    ></TradeButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableWrapper>
+      )}
     </div>
   );
 };

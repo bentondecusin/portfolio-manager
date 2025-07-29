@@ -28,11 +28,11 @@ export default function TradeWindow({ isOpen, onClose, preTradeSymbol }) {
                 &times;
               </a>
             </button>
-            <h2 className="text-xl font-semibold mb-4">
-              Trade <a className="bg-red-900"></a>
-              {preTradeSymbol} at 0 commission fee
-            </h2>
-            <TradingWindow ticker="AAPL" availableCash={12000} holdings={50} />
+            <TradingWindow
+              ticker={preTradeSymbol}
+              availableCash={12000}
+              holdings={50}
+            />
           </motion.div>
         </motion.div>
       )}
@@ -70,7 +70,7 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
 
   return (
     <div className="max-w-md mx-auto flex flex-col align-center p-6 space-y-4 bg-white">
-      <h2 className="text-xl font-bold text-center">Trade {ticker}</h2>
+      <h2 className="text-xl font-bold text-center">Market Order: {ticker}</h2>
 
       <div className="flex justify-between text-sm text-gray-600">
         <div>Available Cash: ${availableCash.toFixed(2)}</div>
