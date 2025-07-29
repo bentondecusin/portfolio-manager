@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const app = require("./src/route/index.js");
 const PORT = 8080;
 

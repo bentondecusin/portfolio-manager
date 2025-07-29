@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 
-const assetRoute = require('../route/assetRoute');
-const transactionRoute = require('../route/transactionRoute');
+const assetRoute = require('./assetRoute');
+const transactionRoute = require('./transactionRoute');
 
 const app = express();
 
