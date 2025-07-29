@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import db from '../../db_test' // Adjust path as needed
+import db from '../../db' // Adjust path as needed
 
 interface Asset {
   symbol: string
