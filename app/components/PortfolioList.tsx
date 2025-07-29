@@ -6,148 +6,117 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+} from "../../components/ui/table";
 import TableWrapper from "../table_wrapper";
 
-type Portfolio = {
-  name: string;
-  symbol: string;
-  shares: number;
-  price: string;
-  totalReturn: string;
+type Transaction = {
+    id: string,
+    symbol: string,
+    tick_name: string,
+    txn_type: string,
+    quantity: string,
+    price: string,
+    txn_ts: string
 };
 
-const portfolios_test = [
-  {
-    name: "Apple Inc.",
-    symbol: "AAPL",
-    shares: 10,
-    price: "$150.00",
-    totalReturn: "$1500.00",
-  },
-  {
-    name: "Alphabet Inc.",
-    symbol: "GOOGL",
-    shares: 5,
-    price: "$2800.00",
-    totalReturn: "$14000.00",
-  },
-  {
-    name: "Amazon.com Inc.",
-    symbol: "AMZN",
-    shares: 2,
-    price: "$3400.00",
-    totalReturn: "$6800.00",
-  },
-  {
-    name: "Microsoft Corporation",
-    symbol: "MSFT",
-    shares: 8,
-    price: "$299.00",
-    totalReturn: "$2392.00",
-  },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+type Holding = {
+    symbol: string,
+    tick_name: string,
+    totalShares: number,
+    lastPrice: number,
+    totalValue: number
+};
 
 const PortfolioList = () => {
-  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // const fetchPortfolios = async () => {
-    //     try {
-    //         const res = await fetch('/api/portfolios');
-    //         const data = await res.json();
-    //         setPortfolios(data);
-    //     } catch (error) {
-    //         console.error('Failed to fetch portfolios:', error);
-    //     } 
-    // };
+    const fetchTransactions = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/transactions');
+        const data = await res.json();
+        setTransactions(data);
+      } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // fetchPortfolios();
-
-    setPortfolios(portfolios_test);
+    fetchTransactions();
   }, []);
 
-  // 转换数据格式为饼图所需格式
-  const pieData = portfolios.map((portfolio, index) => ({
-    name: portfolio.symbol,
-    value: portfolio.shares,
-    color: COLORS[index % COLORS.length]
-  }));
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const holdingsMap = new Map<string, Holding>();
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium">{`${payload[0].name}`}</p>
-          <p className="text-sm text-gray-600">{`Shares: ${payload[0].value}`}</p>
-        </div>
-      )
+      transactions.forEach((transaction) => {
+        const symbol = transaction.symbol;
+        const quantity = parseFloat(transaction.quantity);
+        const price = parseFloat(transaction.price);
+        const isBuy = transaction.txn_type === 'Buy';
+
+        if (!holdingsMap.has(symbol)) {
+          holdingsMap.set(symbol, {
+            symbol,
+            tick_name: transaction.tick_name,
+            totalShares: 0,
+            lastPrice: price,
+            totalValue: 0
+          });
+        }
+
+        const holding = holdingsMap.get(symbol)!;
+        // Always update lastPrice to the latest transaction's price
+        holding.lastPrice = price;
+
+        if (isBuy) {
+          holding.totalShares += quantity;
+        } else {
+          holding.totalShares -= Math.min(holding.totalShares, quantity);
+        }
+        holding.totalValue = holding.totalShares * holding.lastPrice;
+      });
+
+      const finalHoldings = Array.from(holdingsMap.values())
+        .filter(holding => holding.totalShares > 0)
+        .sort((a, b) => b.totalValue - a.totalValue);
+
+      setHoldings(finalHoldings);
     }
-    return null
-  };
+  }, [transactions]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="flex gap-6">
-      {/* Table */}
-      <div className="w-1/2">
-        <TableWrapper>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Name</TableHead>
-                <TableHead>Symbol</TableHead>
-                <TableHead>Shares</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead className="text-right">Total Return</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {portfolios.map((portfolio) => (
-                <TableRow key={portfolio.name}>
-                  <TableCell className="font-medium">{portfolio.name}</TableCell>
-                  <TableCell>{portfolio.symbol}</TableCell>
-                  <TableCell>{portfolio.shares}</TableCell>
-                  <TableCell>{portfolio.price}</TableCell>
-                  <TableCell className="text-right">
-                    {portfolio.totalReturn}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableWrapper>
-      </div>
-
-      {/* Pie Chart */}
-      <div className="w-1/2">
-        <div className="w-full h-[300px]">
-          <h3 className="text-lg font-semibold mb-4 text-center">Portfolio Shares Distribution</h3>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
+    <TableWrapper>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-1/5">Symbol</TableHead>
+            <TableHead className="w-1/5">Name</TableHead>
+            <TableHead className="w-1/5">Shares</TableHead>
+            <TableHead className="w-1/5">Price</TableHead>
+            <TableHead className="w-1/5">Total Value</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {holdings.map((holding) => (
+            <TableRow key={holding.symbol}>
+              <TableCell className="font-medium">{holding.symbol}</TableCell>
+              <TableCell>{holding.tick_name}</TableCell>
+              <TableCell>{holding.totalShares.toFixed(0)}</TableCell>
+              <TableCell>${holding.lastPrice.toFixed(2)}</TableCell>
+              <TableCell>${holding.totalValue.toFixed(2)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableWrapper>
   );
 };
 

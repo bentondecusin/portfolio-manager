@@ -1,0 +1,174 @@
+openapi: 3.0.0
+info:
+  title: Portfolio Manager API
+  version: 1.0.0
+  description: API for managing stocks and user transactions in a portfolio
+
+servers:
+  - url: http://localhost:3000/api
+
+paths:
+  /stocks:
+    get:
+      summary: Get all available stocks
+      responses:
+        '200':
+          description: List of stocks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stock'
+
+    post:
+      summary: Add a new stock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stock'
+      responses:
+        '201':
+          description: Stock created
+        '400':
+          description: Invalid input
+
+  /stocks/{symbol}:
+    get:
+      summary: Get stock details by symbol
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stock details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stock'
+        '404':
+          description: Stock not found
+
+  /transactions:
+    get:
+      summary: Get all transactions of current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+    post:
+      summary: Create a new transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '201':
+          description: Transaction created
+        '400':
+          description: Invalid input
+
+  /transactions/{id}:
+    get:
+      summary: Get transaction by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Not found
+
+    delete:
+      summary: Delete transaction by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Order deleted successfully
+        '404':
+          description: Not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Stock:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: AAPL
+        name:
+          type: string
+          example: Apple Inc.
+        class:
+          type: string
+          example: Equity
+        date:
+          type: string
+          format: date
+          example: 2025-07-28
+        price:
+          type: number
+          format: float
+          example: 192.56
+      required: [symbol, date]
+
+    Transaction:
+      type: object
+      properties:
+        order_id:
+          type: string
+          example: txn123
+        stock_symbol:
+          type: string
+          example: AAPL
+        amount:
+          type: integer
+          example: 10
+        price:
+          type: number
+          example: 190.00
+        date:
+          type: string
+          format: date
+          example: 2025-07-28
+      required: [order_id]

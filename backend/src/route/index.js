@@ -1,25 +1,15 @@
 const express = require('express');
-const cors    = require('cors');
+const cors = require('cors');
 
 const portfolioRoute = require('../route/portfolioRoute');
-const assetRoute     = require('../route/assetRoute');
 
 const app = express();
-
-// Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
 
-// Mount routes
-app.use('/portfolio', portfolioRoute);
-app.use('/assets',    assetRoute);
+app.use('/', portfolioRoute);
 
-// Fallback for undefined routes (optional)
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
-});
-
-// Basic error handler
+// basic error handler
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ error: 'Internal Server Error' });
