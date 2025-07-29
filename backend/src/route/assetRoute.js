@@ -7,8 +7,11 @@ const ctrl    = require('../controller/assetController');
 // Live quote
 router.get('/:symbol/live',    ctrl.getAssetLive);
 
-// Historical data
-// E.g. /assets/AAPL/history?period1=2025-01-01&period2=2025-07-29&outputsize=compact
+// Historical data (Alpha Vantage)
+// Examples:
+// - Intraday (5min): /assets/AAPL/history?type=intraday
+// - Daily (last week): /assets/AAPL/history?type=daily&range=week
+// - Daily (last month): /assets/AAPL/history?type=daily&range=month
 router.get('/:symbol/history', ctrl.getAssetHistory);
 
 module.exports = router;
