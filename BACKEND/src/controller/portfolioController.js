@@ -1,27 +1,20 @@
-const service = require('../service/portfolioService');
-const txnService = require('../service/transactionService')
+const { default: next } = require('next');
+const portfolioSVC = require('../service/portfolioService');
+const txnSVC = require('../service/transactionService')
 
-async function getTransactions(req, res, next) {
-    try {
-        const txn_list = await txnService.getTxnHistory();
-        res.status(201).json(txn_list);
-    } catch (err) {
-        next(err);
-    }
-}
-
-async function postTransaction(req, res, next) {
+async function getAllTxn(req, res, next) {
   try {
-    const txn = await service.recordTransaction(req.body);
-    res.status(201).json(txn);
-  } catch (err) { next(err); }
+    res.json(await txnSVC.getTxnHistory());
+  } catch (e) {
+    console.log('Error in getAllTxn(Controller)', e);
+  }
 }
 
-async function getPortfolioLive(_req, res, next) {
+async function getPortfolioLive(req, res, next) {
   try {
-    const portfolio = await service.getLivePortfolio();
-    res.json(portfolio);
-  } catch (err) { next(err); }
+    res.json(await portfolioSVC.getLivePortfolio());
+  } catch (e) { 
+    console.log('Error in getPortfolioLive(Controller)', e);
+  }
 }
-
-module.exports = { getTransactions, postTransaction, getPortfolioLive };
+module.exports = { getAllTxn, getPortfolioLive };
