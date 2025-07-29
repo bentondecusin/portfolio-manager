@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import TableWrapper from "../table_wrapper";
 
 type Portfolio = {
@@ -48,6 +49,8 @@ const portfolios_test = [
   },
 ];
 
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+
 const PortfolioList = () => {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
 
@@ -59,7 +62,7 @@ const PortfolioList = () => {
     //         setPortfolios(data);
     //     } catch (error) {
     //         console.error('Failed to fetch portfolios:', error);
-    //     }
+    //     } 
     // };
 
     // fetchPortfolios();
@@ -67,35 +70,84 @@ const PortfolioList = () => {
     setPortfolios(portfolios_test);
   }, []);
 
-  // if (loading) return <div>Loading...</div>;
+  // 转换数据格式为饼图所需格式
+  const pieData = portfolios.map((portfolio, index) => ({
+    name: portfolio.symbol,
+    value: portfolio.shares,
+    color: COLORS[index % COLORS.length]
+  }));
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="font-medium">{`${payload[0].name}`}</p>
+          <p className="text-sm text-gray-600">{`Shares: ${payload[0].value}`}</p>
+        </div>
+      )
+    }
+    return null
+  };
 
   return (
-    <TableWrapper>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Name</TableHead>
-            <TableHead>Symbol</TableHead>
-            <TableHead>Shares</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead className="text-right">Total Return</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {portfolios.map((portfolio) => (
-            <TableRow key={portfolio.name}>
-              <TableCell className="font-medium">{portfolio.name}</TableCell>
-              <TableCell>{portfolio.symbol}</TableCell>
-              <TableCell>{portfolio.shares}</TableCell>
-              <TableCell>{portfolio.price}</TableCell>
-              <TableCell className="text-right">
-                {portfolio.totalReturn}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableWrapper>
+    <div className="flex gap-6">
+      {/* Table */}
+      <div className="w-1/2">
+        <TableWrapper>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Name</TableHead>
+                <TableHead>Symbol</TableHead>
+                <TableHead>Shares</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead className="text-right">Total Return</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {portfolios.map((portfolio) => (
+                <TableRow key={portfolio.name}>
+                  <TableCell className="font-medium">{portfolio.name}</TableCell>
+                  <TableCell>{portfolio.symbol}</TableCell>
+                  <TableCell>{portfolio.shares}</TableCell>
+                  <TableCell>{portfolio.price}</TableCell>
+                  <TableCell className="text-right">
+                    {portfolio.totalReturn}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableWrapper>
+      </div>
+
+      {/* Pie Chart */}
+      <div className="w-1/2">
+        <div className="w-full h-[300px]">
+          <h3 className="text-lg font-semibold mb-4 text-center">Portfolio Shares Distribution</h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
   );
 };
 
