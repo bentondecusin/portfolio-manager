@@ -54,12 +54,10 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
   holdings,
 }) => {
   const [quantity, setQuantity] = useState(0);
-  const [mode, setMode] = useState<TradeMode>("BUY");
+  const [buy_or_sell, set_buy_or_sell] = useState<"BUY" | "SELL">("BUY");
 
   const increment = () => setQuantity((prev) => prev + 1);
   const decrement = () => setQuantity((prev) => (prev > 0 ? prev - 1 : 0));
-
-  const toggleMode = () => setMode((prev) => (prev === "BUY" ? "SELL" : "BUY"));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value, 10);
@@ -67,11 +65,11 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
   };
 
   const handleExecute = () => {
-    console.log("Execute trade:", { mode, ticker, quantity });
+    console.log("Execute trade:", { buy_or_sell, ticker, quantity });
   };
 
   return (
-    <div className="max-w-md mx-auto  p-6 space-y-4 bg-white">
+    <div className="max-w-md mx-auto flex flex-col align-center p-6 space-y-4 bg-white">
       <h2 className="text-xl font-bold text-center">Trade {ticker}</h2>
 
       <div className="flex justify-between text-sm text-gray-600">
@@ -90,7 +88,7 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
         <input
           type="number"
           min={0}
-          className="w-20 text-center border rounded px-2 py-1"
+          className="w-20 text-xl text-center border rounded px-2 py-1"
           value={quantity}
           onChange={handleChange}
         />
@@ -103,15 +101,27 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
         </button>
       </div>
 
-      <div className="flex justify-center items-center gap-4">
-        <span className="text-sm">Mode:</span>
+      <div className="flex justify-center gap-4">
         <button
-          onClick={toggleMode}
-          className={`px-4 py-2 rounded-full text-white font-semibold ${
-            mode === "BUY" ? "bg-green-500" : "bg-red-500"
+          onClick={() => set_buy_or_sell("BUY")}
+          className={`px-4 py-2 rounded font-bold transition ${
+            buy_or_sell === "BUY"
+              ? "cursor-pointer bg-green-600 text-white"
+              : "cursor-pointer bg-green-200 text-green-500 opacity-50"
           }`}
         >
-          {mode}
+          Buy
+        </button>
+
+        <button
+          onClick={() => set_buy_or_sell("SELL")}
+          className={`px-4 py-2 rounded font-bold transition ${
+            buy_or_sell === "SELL"
+              ? "cursor-pointer bg-red-600 text-white"
+              : "cursor-pointer bg-red-200 text-red-500 opacity-50"
+          }`}
+        >
+          Sell
         </button>
       </div>
 
