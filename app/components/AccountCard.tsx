@@ -7,99 +7,132 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+} from "../../components/ui/card"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
-type Portfolio = {
-    name: string;
-    symbol: string;
-    shares: number;
-    price: string;
-    totalReturn: string;
+type Transaction = {
+    id: string,
+    symbol: string,
+    tick_name: string,
+    txn_type: string,
+    quantity: string,
+    price: string,
+    txn_ts: string
 };
 
-const portfolios_test: Portfolio[] = [
-    {
-        name: "Apple Inc.",
-        symbol: "AAPL",
-        shares: 10,
-        price: "$150.00",
-        totalReturn: "$1500.00",
-    },
-    {
-        name: "Alphabet Inc.",
-        symbol: "GOOGL",
-        shares: 5,
-        price: "$2800.00",
-        totalReturn: "$14000.00",
-    },
-    {
-        name: "Amazon.com Inc.",
-        symbol: "AMZN",
-        shares: 2,
-        price: "$3400.00",
-        totalReturn: "$6800.00",
-    },
-    {
-        name: "Microsoft Corporation",
-        symbol: "MSFT",
-        shares: 8,
-        price: "$299.00",
-        totalReturn: "$2392.00",
-    },
-];
+type Holding = {
+    symbol: string,
+    tick_name: string,
+    totalShares: number,
+    lastPrice: number,
+    totalValue: number
+};
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
 const AccountCard = () => {
-    const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [holdings, setHoldings] = useState<Holding[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setPortfolios(portfolios_test);
+        const fetchTransactions = async () => {
+            try {
+                const res = await fetch('http://localhost:8080/transactions');
+                const data = await res.json();
+                setTransactions(data);
+            } catch (error) {
+                console.error('Failed to fetch transactions:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+    
+        fetchTransactions();
     }, []);
 
-    const pieData = portfolios.map((portfolio, index) => ({
-        name: portfolio.symbol,
-        value: portfolio.shares,
+    useEffect(() => {
+        if (transactions.length > 0) {
+            const holdingsMap = new Map<string, Holding>();
+            transactions.forEach((transaction) => {
+                const symbol = transaction.symbol;
+                const quantity = parseFloat(transaction.quantity);
+                const price = parseFloat(transaction.price);
+                const isBuy = transaction.txn_type === 'Buy';
+                if (!holdingsMap.has(symbol)) {
+                    holdingsMap.set(symbol, {
+                        symbol,
+                        tick_name: transaction.tick_name,
+                        totalShares: 0,
+                        lastPrice: price,
+                        totalValue: 0
+                    });
+                }
+                const holding = holdingsMap.get(symbol)!;
+                holding.lastPrice = price; // always update to latest transaction price
+                if (isBuy) {
+                    holding.totalShares += quantity;
+                } else {
+                    holding.totalShares -= Math.min(holding.totalShares, quantity);
+                }
+                holding.totalValue = holding.totalShares * holding.lastPrice;
+            });
+            const finalHoldings = Array.from(holdingsMap.values())
+                .filter(holding => holding.totalShares > 0)
+                .sort((a, b) => b.totalValue - a.totalValue);
+            setHoldings(finalHoldings);
+        }
+    }, [transactions]);
+
+    const pieData = holdings.map((holding, index) => ({
+        name: holding.symbol,
+        value: holding.totalValue,
         color: COLORS[index % COLORS.length]
     }));
 
+    const totalPortfolioValue = holdings.reduce((sum, holding) => sum + holding.totalValue, 0);
+
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
+            const holding = holdings.find(h => h.symbol === payload[0].name);
             return (
                 <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
                     <p className="font-medium">{`${payload[0].name}`}</p>
-                    <p className="text-sm text-gray-600">{`Shares: ${payload[0].value}`}</p>
+                    <p className="text-sm text-gray-600">{`Shares: ${holding?.totalShares.toFixed(0)}`}</p>
+                    <p className="text-sm text-gray-600">{`Price: $${holding?.lastPrice.toFixed(2)}`}</p>
+                    <p className="text-sm text-gray-600">{`Value: $${payload[0].value.toFixed(2)}`}</p>
                 </div>
             )
         }
         return null
     };
 
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <Card className='p-2'>
             <div className='flex gap-4'>
                 <div className='flex-1'>
                     <CardHeader className='pb-1'>
-                        <CardTitle className='font-semi-bold text-5xl mt-4'>Jhon Doe</CardTitle>
+                        <CardTitle className='font-semi-bold text-5xl mt-4'>John Doe</CardTitle>
                     </CardHeader>
                     <CardContent className='flex gap-3 py-2'>
                         <div className='flex flex-col w-1/2'>
                             <p className='font-semi-bold text-4xl'>Value</p>
-                            <CardDescription className='text-xl'>$1000</CardDescription>
+                            <CardDescription className='text-xl'>${totalPortfolioValue.toFixed(2)}</CardDescription>
                         </div>
                         <div className='flex flex-col w-1/2'>
                             <p className='font-semi-bold text-4xl'>Balance</p>
-                            <CardDescription className='text-xl'>$200</CardDescription>
+                            <CardDescription className='text-xl'>$10000</CardDescription>
                         </div>
                     </CardContent>
                 </div>
-        
-            
-            {/* Pie Chart */}
+                {/* Pie Chart */}
                 <div className='flex-1'>
                     <CardContent className='pt-4'>
-                        <h3 className="text-lg font-semibold mb-2 text-center">Portfolio Shares Distribution</h3>
+                        <h3 className="text-lg font-semibold mb-2 text-center">Portfolio Distribution</h3>
                         {pieData.length > 0 ? (
                             <div className="h-[180px]">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -109,7 +142,7 @@ const AccountCard = () => {
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
-                                            outerRadius={60}
+                                            outerRadius={80}
                                             fill="#8884d8"
                                             dataKey="value"
                                         >
@@ -118,7 +151,6 @@ const AccountCard = () => {
                                             ))}
                                         </Pie>
                                         <Tooltip content={<CustomTooltip />} />
-                                        <Legend />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
@@ -126,7 +158,7 @@ const AccountCard = () => {
                             <div className="h-[180px] flex items-center justify-center">
                                 <div className="text-center">
                                     <div className="w-32 h-32 rounded-full border-4 border-gray-200 mx-auto mb-4"></div>
-                                    <p className="text-gray-500 text-lg">Empty</p>
+                                    <p className="text-gray-500 text-lg">No Holdings</p>
                                 </div>
                             </div>
                         )}
