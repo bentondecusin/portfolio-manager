@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import useSWR from 'swr'
 import { CartesianGrid, XAxis, YAxis, ResponsiveContainer, ComposedChart, Bar } from "recharts"
 import {
   ChartConfig,
@@ -142,67 +143,99 @@ export function generateMockChartData(count: number = 30, startDate: string | Da
   return data;
 }
 
+// SWR fetcher function
+const fetcher = async (url: string): Promise<ApiResponse> => {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Failed to fetch data (${response.status})`;
+    
+    switch (response.status) {
+      case 404:
+        errorMessage = `Data not found`;
+        break;
+      case 429:
+        errorMessage = 'Rate limit exceeded. Please try again later';
+        break;
+      case 500:
+        errorMessage = 'Server error. Please try again later';
+        break;
+      case 503:
+        errorMessage = 'Service temporarily unavailable';
+        break;
+      default:
+        errorMessage = `HTTP error! status: ${response.status}`;
+    }
+    
+    throw new Error(errorMessage);
+  }
+
+  const apiData: ApiResponse = await response.json();
+  
+  if (!apiData.data || apiData.data.length === 0) {
+    throw new Error(`No data available`);
+  }
+  
+  return apiData;
+};
+
 const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
   const [days, setDays] = React.useState(1);
-  const [chartData, setChartData] = React.useState<CandleData[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
 
-  // Transform API data to candlestick format
-  const transformApiData = (apiResponse: ApiResponse): CandleData[] => {
-    return apiResponse.data.map((item: ApiDataPoint) => ({
+  // Memoized API URL
+  const apiUrl = React.useMemo(() => {
+    if (!symbol) return null;
+    
+    let url = `http://localhost:8080/assets/${symbol}/history`;
+    if (days === 7) {
+      url += '?type=daily&range=week'
+    } else if (days === 30) {
+      url += '?type=daily&range=month'
+    }
+    return url;
+  }, [symbol, days]);
+
+  // SWR hook for data fetching
+  const { data: rawData, error, isLoading, mutate } = useSWR(
+    apiUrl,
+    fetcher,
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 60000, // Revalidate every minute
+      dedupingInterval: 30000, // Dedupe requests within 30 seconds
+      errorRetryCount: 3,
+      errorRetryInterval: 5000,
+      onError: (error) => {
+        console.error('SWR Error fetching chart data:', error);
+      }
+    }
+  );
+
+  // Memoized transformation of API data to candlestick format
+  const chartData = React.useMemo((): CandleData[] => {
+    if (!rawData?.data) return [];
+    
+    return rawData.data.map((item: ApiDataPoint) => ({
       date: item.date,
       open: item.open,
       high: item.high,
       low: item.low,
       close: item.close,
       volume: item.volume,
-      color: item.close >= item.open ? "#10b981" : "#ef4444" // Green for up, red for down
+      color: item.close >= item.open ? "#10b981" : "#ef4444"
     }));
+  }, [rawData]);
+
+  // Manual refresh function
+  const handleRefresh = () => {
+    mutate();
   };
-
-  React.useEffect(() => {
-    if (!symbol) return;
-
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // let url = `http://localhost:8080/assets/${symbol}/history`;
-        // if (days === 7) {
-        //   url += '?type=daily&range=week'
-        // } else if (days === 30) {
-        //   url += '?type=daily&range=month'
-        // } else if (days === 1) {
-        // }
-
-        // const response = await fetch(url, {
-        //   method: 'GET',
-        // });
-
-        // if (!response.ok) {
-        //   throw new Error(`HTTP error! status: ${response.status}`);
-        // }
-
-        // const apiData: ApiResponse = await response.json();
-        // console.log('Fetched chart data:', apiData);
-        
-        // const transformedData = transformApiData(apiData);
-        // setChartData(transformedData);
-        setChartData(generateMockChartData(30, new Date('2023-10-01'))); // Mock data for testing
-        
-      } catch (error) {
-        console.error('Error fetching chart data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch data');
-        setChartData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [symbol, days]);
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -262,9 +295,9 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         </div>
       </CardHeader>
 
-      <CardContent className="px-2 sm:p-6">
+      <CardContent className="px-2 sm:px-6 pt-6 pb-2">
         {/* Loading State */}
-        {loading && (
+        {isLoading && (
           <div className="flex items-center justify-center h-[400px] w-full">
             <div className="text-center space-y-2">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto"></div>
@@ -274,17 +307,23 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         )}
 
         {/* Error State */}
-        {error && !loading && (
+        {error && !isLoading && (
           <div className="flex items-center justify-center h-[400px] w-full">
             <div className="text-center space-y-2">
               <p className="text-destructive font-medium">Error loading chart data</p>
-              <p className="text-sm text-muted-foreground">{error}</p>
+              <p className="text-sm text-muted-foreground">{error.message}</p>
+              <button 
+                onClick={handleRefresh}
+                className="text-sm text-primary hover:underline"
+              >
+                Try again
+              </button>
             </div>
           </div>
         )}
 
         {/* Candlestick Chart */}
-        {!loading && !error && chartData.length > 0 && (
+        {!isLoading && !error && chartData.length > 0 && (
           <>
             <div className="w-full h-[400px] mb-2 rounded-xl bg-muted/40 border shadow-inner flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
@@ -405,7 +444,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         )}
 
         {/* No Data State */}
-        {!loading && !error && chartData.length === 0 && (
+        {!isLoading && !error && chartData.length === 0 && (
           <div className="flex items-center justify-center h-[400px] w-full">
             <div className="text-center space-y-2">
               <p className="text-muted-foreground">No candlestick data available</p>

@@ -124,6 +124,7 @@ async function getAssetHistory(req, res, next) {
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
+    console.log(`Fetched ${result.length} data points for ${symbol} (${type}, ${range}) from ${from} to ${today}, data: ${JSON.stringify(result)}`);
     res.json({
       symbol,
       type,
