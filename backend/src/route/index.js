@@ -1,12 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+const cors = require('cors');
 
 const assetRoute = require('./assetRoute');
 const transactionRoute = require('./transactionRoute');
 
 const app = express();
-
-// Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
 
