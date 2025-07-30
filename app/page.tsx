@@ -16,6 +16,7 @@ export default function Home() {
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
   const [trendSymbol, setTrendSymbol] = useState("AAPL");
   const [isTopUpDone, setIsTopUpDone] = useState(true);
+  const [balance, setBalance] = useState<string>('0.00');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,6 +39,8 @@ export default function Home() {
           <AccountCard 
             isTopUpDone={isTopUpDone}
             setIsTopUpDone={setIsTopUpDone}
+            setBalance={setBalance}
+            balance={balance}
           />
         </div>
 

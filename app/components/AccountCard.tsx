@@ -12,6 +12,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 interface AccountCardProps {
     isTopUpDone?: boolean;
     setIsTopUpDone?: (value: boolean) => void;
+    setBalance?: (value: string) => void; // Optional prop to set balance
+    balance?: string; // Optional prop to display balance
 }
 
 type Transaction = {
@@ -45,10 +47,9 @@ type Holding = {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone }) => {
+const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone, setBalance, balance }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
-    const [balance, setBalance] = useState<string>('0.00');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -64,7 +65,9 @@ const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone }
                 const balanceRes = await fetch('http://localhost:8080/balance');
                 const balanceData = await balanceRes.json();
                 console.log('Balance data:', balanceData);
-                setBalance(balanceData.balance);
+                if (setBalance) {
+                    setBalance(balanceData.balance);
+                }
                 
                 // Reset the topup done flag after fetching
                 if (setIsTopUpDone && isTopUpDone) {
