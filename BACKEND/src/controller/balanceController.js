@@ -10,6 +10,7 @@ async function getCashBalance(req, res, next) {
 }
 
 async function putCashBalance(req, res, next) {
+  console.log('putCashBalance called, request body:', req.body);
   try {
     const { amount } = req.body;
     if (!amount || typeof amount !== 'number') {
