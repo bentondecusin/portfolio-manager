@@ -187,41 +187,36 @@ const fetcher = async (url: string): Promise<ApiResponse> => {
 const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
   const [days, setDays] = React.useState(1);
 
-  // Memoized API URL
-  const apiUrl = React.useMemo(() => {
-    if (!symbol) return null;
-    
+  // Build API URL
+  let apiUrl = null;
+  if (symbol) {
     let url = `http://localhost:8080/assets/${symbol}/history`;
+    let params = new URLSearchParams();
+    
     if (days === 7) {
-      url += '?type=daily&range=week'
+      params.append('type', 'daily');
+      params.append('range', 'week');
     } else if (days === 30) {
-      url += '?type=daily&range=month'
+      params.append('type', 'daily');
+      params.append('range', 'month');
+    } else {
+      params.append('type', 'intraday');
     }
-    return url;
-  }, [symbol, days]);
+    
+    const queryString = params.toString();
+    apiUrl = queryString ? `${url}?${queryString}` : url;
+  }
 
   // SWR hook for data fetching
   const { data: rawData, error, isLoading, mutate } = useSWR(
-    apiUrl,
-    fetcher,
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 60000, // Revalidate every minute
-      dedupingInterval: 30000, // Dedupe requests within 30 seconds
-      errorRetryCount: 3,
-      errorRetryInterval: 5000,
-      onError: (error) => {
-        console.error('SWR Error fetching chart data:', error);
-      }
-    }
+    apiUrl && symbol ? apiUrl : null,
+    fetcher
   );
 
-  // Memoized transformation of API data to candlestick format
-  const chartData = React.useMemo((): CandleData[] => {
-    if (!rawData?.data) return [];
-    
-    return rawData.data.map((item: ApiDataPoint) => ({
+  // Transform API data to candlestick format
+  let chartData: CandleData[] = [];
+  if (rawData?.data) {
+    chartData = rawData.data.map((item: ApiDataPoint) => ({
       date: item.date,
       open: item.open,
       high: item.high,
@@ -230,11 +225,13 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
       volume: item.volume,
       color: item.close >= item.open ? "#10b981" : "#ef4444"
     }));
-  }, [rawData]);
+  }
 
-  // Manual refresh function
+  // Manual refresh function (only for error cases)
   const handleRefresh = () => {
-    mutate();
+    if (error) {
+      mutate();
+    }
   };
 
   const formatPrice = (value: number) => {
@@ -262,7 +259,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
               {symbol}
             </CardTitle>
             <CardDescription>
-              Real-time trading data
+              Realtime trading data
             </CardDescription>
           </div>
           <div className="flex w-[50%] items-center mr-5">
@@ -302,6 +299,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
             <div className="text-center space-y-2">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto"></div>
               <p className="text-sm text-muted-foreground">Loading candlestick data...</p>
+              <p className="text-xs text-muted-foreground">Data will be cached for future use</p>
             </div>
           </div>
         )}
@@ -314,9 +312,9 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
               <p className="text-sm text-muted-foreground">{error.message}</p>
               <button 
                 onClick={handleRefresh}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline mt-2 px-3 py-1 border rounded"
               >
-                Try again
+                Retry
               </button>
             </div>
           </div>
@@ -325,6 +323,18 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         {/* Candlestick Chart */}
         {!isLoading && !error && chartData.length > 0 && (
           <>
+            {/* Cache indicator */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center text-xs text-muted-foreground">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              {rawData?.data && rawData.data.length > 0 && (
+                <span className="flex items-center">
+                {rawData.data.length} points • {new Date(rawData.from).toLocaleDateString()} to {new Date(rawData.to).toLocaleDateString()}
+                </span>
+              )}
+              </div>
+            </div>
+            
             <div className="w-full h-[400px] mb-2 rounded-xl bg-muted/40 border shadow-inner flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
