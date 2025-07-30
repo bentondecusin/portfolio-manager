@@ -12,8 +12,8 @@ import TopUp from './TopUpButton'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface AccountCardProps {
-    amount: string;
-    setAmount: (value: string) => void;
+    isTopUpDone?: boolean;
+    setIsTopUpDone?: (value: boolean) => void;
 }
 
 type Transaction = {
@@ -36,27 +36,40 @@ type Holding = {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-const AccountCard: React.FC<AccountCardProps> = ({ amount, setAmount }) => {
+const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
+    const [balance, setBalance] = useState<string>('0.00');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchTransactions = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch('http://localhost:8080/transactions');
-                const data = await res.json();
-                console.log('MYDATA', data);
-                setTransactions(data);
+                // Fetch transactions
+                const transactionsRes = await fetch('http://localhost:8080/transactions');
+                const transactionsData = await transactionsRes.json();
+                console.log('MYDATA', transactionsData);
+                setTransactions(transactionsData);
+
+                // Fetch balance
+                const balanceRes = await fetch('http://localhost:8080/balance');
+                const balanceData = await balanceRes.json();
+                console.log('Balance data:', balanceData);
+                setBalance(balanceData.balance);
+                
+                // Reset the topup done flag after fetching
+                if (setIsTopUpDone && isTopUpDone) {
+                    setIsTopUpDone(false);
+                }
             } catch (error) {
-                console.error('Failed to fetch transactions:', error);
+                console.error('Failed to fetch data:', error);
             } finally {
                 setLoading(false);
             }
         };
     
-        fetchTransactions();
-    }, []);
+        fetchData();
+    }, [isTopUpDone, setIsTopUpDone]); // Re-fetch when isTopUpDone changes
 
     useEffect(() => {
         if (transactions.length > 0) {
@@ -125,7 +138,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ amount, setAmount }) => {
                     <CardHeader className='pb-1'>
                     <div className='flex items-end justify-start mt-4  space-x-2'>
                         <CardTitle className='font-semi-bold text-5xl'>Jhon Doe</CardTitle>
-                        <TopUp amount={amount} setAmount={setAmount} />
+                        <TopUp setIsTopUpDone={setIsTopUpDone} />
                     </div>
                 </CardHeader>
                     <CardContent className='flex gap-3 py-2'>
@@ -135,7 +148,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ amount, setAmount }) => {
                         </div>
                         <div className='flex flex-col w-1/2'>
                             <p className='font-semi-bold text-4xl'>Balance</p>
-                            <CardDescription className='text-xl'>${amount}</CardDescription>
+                            <CardDescription className='text-xl'>${balance}</CardDescription>
                         </div>
                     </CardContent>
                 </div>
