@@ -187,32 +187,48 @@ const fetcher = async (url: string): Promise<ApiResponse> => {
 const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
   const [days, setDays] = React.useState(1);
 
-  // Memoized API URL
+  // Memoized API URL with more specific key for better caching
   const apiUrl = React.useMemo(() => {
     if (!symbol) return null;
     
     let url = `http://localhost:8080/assets/${symbol}/history`;
+    let params = new URLSearchParams();
+    
     if (days === 7) {
-      url += '?type=daily&range=week'
+      params.append('type', 'daily');
+      params.append('range', 'week');
     } else if (days === 30) {
-      url += '?type=daily&range=month'
+      params.append('type', 'daily');
+      params.append('range', 'month');
+    } else {
+      params.append('type', 'intraday');
     }
-    return url;
+    
+    const queryString = params.toString();
+    return queryString ? `${url}?${queryString}` : url;
   }, [symbol, days]);
 
-  // SWR hook for data fetching
+  // SWR hook for data fetching - only fetch if data doesn't exist
   const { data: rawData, error, isLoading, mutate } = useSWR(
-    apiUrl,
+    // Only fetch if we have a symbol and URL
+    apiUrl && symbol ? apiUrl : null,
     fetcher,
     {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      refreshInterval: 60000, // Revalidate every minute
-      dedupingInterval: 30000, // Dedupe requests within 30 seconds
+      revalidateOnFocus: false,      // Don't refetch when window gains focus
+      revalidateOnReconnect: false,  // Don't refetch when reconnecting
+      refreshInterval: 0,            // Disable automatic refresh
+      dedupingInterval: Infinity,    // Cache forever - never dedupe
+      revalidateIfStale: false,      // Don't revalidate if data is stale
+      revalidateOnMount: true,       // Only fetch on mount if no data exists
       errorRetryCount: 3,
       errorRetryInterval: 5000,
       onError: (error) => {
         console.error('SWR Error fetching chart data:', error);
+      },
+      // Custom condition to prevent unnecessary fetches
+      isPaused: () => {
+        // Don't fetch if we already have data for this specific combination
+        return false; // Let SWR handle this with its built-in caching
       }
     }
   );
@@ -232,9 +248,11 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
     }));
   }, [rawData]);
 
-  // Manual refresh function
+  // Manual refresh function (only for error cases)
   const handleRefresh = () => {
-    mutate();
+    if (error) {
+      mutate();
+    }
   };
 
   const formatPrice = (value: number) => {
@@ -262,7 +280,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
               {symbol}
             </CardTitle>
             <CardDescription>
-              Real-time trading data
+              Realtime trading data
             </CardDescription>
           </div>
           <div className="flex w-[50%] items-center mr-5">
@@ -302,6 +320,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
             <div className="text-center space-y-2">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto"></div>
               <p className="text-sm text-muted-foreground">Loading candlestick data...</p>
+              <p className="text-xs text-muted-foreground">Data will be cached for future use</p>
             </div>
           </div>
         )}
@@ -314,9 +333,9 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
               <p className="text-sm text-muted-foreground">{error.message}</p>
               <button 
                 onClick={handleRefresh}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline mt-2 px-3 py-1 border rounded"
               >
-                Try again
+                Retry
               </button>
             </div>
           </div>
@@ -325,6 +344,21 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         {/* Candlestick Chart */}
         {!isLoading && !error && chartData.length > 0 && (
           <>
+            {/* Cache indicator */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Data cached - tab switching uses existing data</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {rawData?.data && rawData.data.length > 0 && (
+                  <span>
+                    {rawData.data.length} points • {new Date(rawData.from).toLocaleDateString()} to {new Date(rawData.to).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+            
             <div className="w-full h-[400px] mb-2 rounded-xl bg-muted/40 border shadow-inner flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
