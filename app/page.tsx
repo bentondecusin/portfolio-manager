@@ -7,6 +7,8 @@ import { useState } from "react";
 import TradeWindow from "./components/TradeWindow";
 import Navbar from "./components/Navbar";
 import AccountCard from "./components/AccountCard";
+import ChatBot from "./components/ChatBot";
+import TransactionList from "./components/TransactionHistory";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,37 +16,86 @@ export default function Home() {
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
   const [trendSymbol, setTrendSymbol] = useState("AAPL");
   const [isTopUpDone, setIsTopUpDone] = useState(true);
+  const [balance, setBalance] = useState<string>('0.00');
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center  z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
           <TradeWindow
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             preTradeSymbol={preTradeSymbol}
-          ></TradeWindow>
+          />
         </div>
       )}
+      
       <Navbar />
-      <div className="container mx-auto p-4 flex">
-        <div className="w-1/2 pr-2 flex flex-col gap-4">
+      
+      {/* Main Dashboard Section */}
+      <div className="container mx-auto px-6 py-8">
+        {/* Account Overview */}
+        <div className="mb-8">
           <AccountCard 
             isTopUpDone={isTopUpDone}
             setIsTopUpDone={setIsTopUpDone}
-          />
-          <PriceTrend symbol={trendSymbol} />
-        </div>
-        <div className="w-1/2 h-1/3 pl-2">
-          <StockList
-            setIsModalOpen={setIsModalOpen}
-            setTrendSymbol={setTrendSymbol}
-            setPreTradeSymbol={setPreTradeSymbol}
+            setBalance={setBalance}
+            balance={balance}
           />
         </div>
-      </div>
-      <div className="container mx-auto p-4">
-        <PortfolioList />
+
+        {/* Market Data and Stock List */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Left Column - Price Trend */}
+          <div className="space-y-6 h-fit">
+            <div className="h-[600px] flex flex-col">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Price Analysis</h2>
+              <div className="flex-1">
+                <PriceTrend symbol={trendSymbol} />
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Column - Stock List */}
+          <div className="space-y-6 h-fit">
+            <div className="h-[600px] flex flex-col">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Market Watchlist</h2>
+              <div className="flex-1">
+                <StockList
+                  setIsModalOpen={setIsModalOpen}
+                  setTrendSymbol={setTrendSymbol}
+                  setPreTradeSymbol={setPreTradeSymbol}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Portfolio and Transaction Sections */}
+        <div className="space-y-12 mt-36">
+          {/* Current Holdings */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">Current Holdings</h2>
+              <div className="h-1 bg-gradient-to-r from-blue-500 to-transparent flex-1 ml-6 rounded-full"></div>
+            </div>
+            <PortfolioList />
+          </section>
+
+          {/* Transaction History */}
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-gray-900">Transaction History</h2>
+              <div className="h-1 bg-gradient-to-r from-green-500 to-transparent flex-1 ml-6 rounded-full"></div>
+            </div>
+            <TransactionList />
+          </section>
+        </div>
+
+        {/* Chat Bot */}
+        <div className="fixed bottom-6 right-6 z-40">
+          <ChatBot />
+        </div>
       </div>
     </div>
   );

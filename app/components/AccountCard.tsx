@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import {
     Card,
-    CardAction,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -14,6 +12,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 interface AccountCardProps {
     isTopUpDone?: boolean;
     setIsTopUpDone?: (value: boolean) => void;
+    setBalance?: (value: string) => void; // Optional prop to set balance
+    balance?: string; // Optional prop to display balance
 }
 
 type Transaction = {
@@ -26,6 +26,17 @@ type Transaction = {
     txn_ts: string
 };
 
+interface Payload {
+    name: string;
+    value: number;
+}
+
+interface CustomTooltipProps {
+    active: boolean;
+    payload: Payload[];
+    holdings: Holding[];
+}
+
 type Holding = {
     symbol: string,
     tick_name: string,
@@ -36,10 +47,9 @@ type Holding = {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone }) => {
+const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone, setBalance, balance }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
-    const [balance, setBalance] = useState<string>('0.00');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -55,7 +65,9 @@ const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone }
                 const balanceRes = await fetch('http://localhost:8080/balance');
                 const balanceData = await balanceRes.json();
                 console.log('Balance data:', balanceData);
-                setBalance(balanceData.balance);
+                if (setBalance) {
+                    setBalance(balanceData.balance);
+                }
                 
                 // Reset the topup done flag after fetching
                 if (setIsTopUpDone && isTopUpDone) {
@@ -112,7 +124,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone }
 
     const totalPortfolioValue = holdings.reduce((sum, holding) => sum + holding.totalValue, 0);
 
-    const CustomTooltip = ({ active, payload }: any) => {
+    const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
         if (active && payload && payload.length) {
             const holding = holdings.find(h => h.symbol === payload[0].name);
             return (
