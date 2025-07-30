@@ -50,6 +50,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
 const AccountCard: React.FC<AccountCardProps> = ({ isTopUpDone, setIsTopUpDone, setBalance, balance }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
+    const [balance, setBalance] = useState<string>('0.00');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
