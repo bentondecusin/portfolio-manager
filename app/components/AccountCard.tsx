@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import {
     Card,
-    CardAction,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -25,6 +23,17 @@ type Transaction = {
     price: string,
     txn_ts: string
 };
+
+interface Payload {
+    name: string;
+    value: number;
+}
+
+interface CustomTooltipProps {
+    active: boolean;
+    payload: Payload[];
+    holdings: Holding[];
+}
 
 type Holding = {
     symbol: string,
@@ -98,7 +107,7 @@ const AccountCard: React.FC<AccountCardProps> = ({ amount, setAmount }) => {
 
     const totalPortfolioValue = holdings.reduce((sum, holding) => sum + holding.totalValue, 0);
 
-    const CustomTooltip = ({ active, payload }: any) => {
+    const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
         if (active && payload && payload.length) {
             const holding = holdings.find(h => h.symbol === payload[0].name);
             return (

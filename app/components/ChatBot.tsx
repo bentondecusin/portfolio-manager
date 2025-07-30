@@ -93,38 +93,9 @@ const ChatBot = () => {
                         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                         aiResponseText = `Sorry, there was an error fetching ${detectedSymbol}'s data. Error: ${errorMessage}`;
                     }
-                } else {
-                    try {
-                        console.log('Fetching all assets history...');
-                        const url = new URL(`http://localhost:8080/assets/history`);
-                        url.searchParams.set('type', 'daily');
-                        url.searchParams.set('range', 'week');
-
-                        console.log('Request URL:', url.toString());
-                        const resp = await fetch(url.toString());
-                        console.log('Response status:', resp.status);
-                        console.log('Response ok:', resp.ok);
-                        
-                        if (resp.ok) {
-                            const data = await resp.json();
-                            console.log('Response data:', data);
-                            aiResponseText = `Here's yesterday's data for all assets:\n\n` +
-                                `Date: ${data.date || 'Yesterday'}\n` +
-                                `Total Assets: ${data.assets?.length ?? 0}\n` +
-                                `Data Points: ${data.data?.length ?? 0}`;
-                        } else {
-                            const errorText = await resp.text();
-                            console.error('HTTP Error:', resp.status, errorText);
-                            aiResponseText = `Sorry, I couldn't fetch yesterday's data. HTTP ${resp.status}: ${errorText}`;
-                        }
-                    } catch (error) {
-                        console.error('Error fetching yesterday data:', error);
-                        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                        aiResponseText = `Sorry, there was an error fetching yesterday's data. Error: ${errorMessage}`;
-                    }
-                }
+                } 
             } else {
-                aiResponseText = `I'm here to help with your financial queries! You can ask me about stock prices by mentioning "yesterday" and a stock symbol, like "What was AAPL's price yesterday?" or just "yesterday" for all assets data.`;
+                aiResponseText = `I'm here to help with your financial queries! You can ask me about stock prices by mentioning "yesterday" and a stock symbol, like "What was AAPL's price yesterday?"`;
             }
 
             // Simulate AI response delay
@@ -147,7 +118,7 @@ const ChatBot = () => {
                 {isChatBotOpen &&
                     <div className="rounded-md w-[20rem] md:w-[25rem] lg:w-[30rem] h-[70vh] bg-slate-100 shadow-lg border">
                         <div className="flex justify-between items-center border-b-2 px-6 h-[12%]">
-                            <p className='font-semibold text-lg'>Let's Chat!</p>
+                            <p className='font-semibold text-lg'>Let us Chat!</p>
                             <Button
                                 variant={'ghost'}
                                 size={'icon'}
@@ -202,7 +173,7 @@ const ChatBot = () => {
                         onClick={handleChatBotOpen}
                     >
                         <MessageCircle className='fill-[#FFFFFF] -rotate-90' style={{ width: '24px', height: '24px' }} />
-                        <span className='text-xl'>Let's Chat!</span>
+                        <span className='text-xl'>Let us Chat!</span>
                     </Button>
                 </div>
             </section>
