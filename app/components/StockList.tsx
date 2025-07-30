@@ -26,10 +26,7 @@ const StockList: React.FC<StockListProps> = ({
   setTrendSymbol,
   setPreTradeSymbol,
 }) => {
-  const { data, error, isLoading } = useSWR(
-    `http://localhost:8080/assets/live`,
-    fetcher
-  );
+  const { data, error, isLoading } = useSWR("api/assets/live", fetcher);
   let mkt_prix = data;
   console.log("mkt_prix", mkt_prix);
   if (error) console.error(error);
