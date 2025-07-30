@@ -1,16 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { trade } from "../actions";
 
-export default function TradeWindow({
-  isOpen,
-  onClose,
-  preTradeSymbol,
-  userState,
-  setUserState,
-}) {
+export default function TradeWindow({ isOpen, onClose, preTradeSymbol }) {
   const [isBuy, setBuy] = useState("fal");
   return (
     <AnimatePresence>
@@ -35,13 +29,7 @@ export default function TradeWindow({
                 &times;
               </a>
             </button>
-            <TradingWindow
-              ticker={preTradeSymbol}
-              availableCash={12000}
-              holdings={50}
-              userState={userState}
-              setUserState={setUserState}
-            />
+            <TradingWindow ticker={preTradeSymbol}></TradingWindow>
           </motion.div>
         </motion.div>
       )}
@@ -53,24 +41,20 @@ type TradeMode = "BUY" | "SELL";
 
 interface TradingWindowProps {
   ticker: string;
-
-  availableCash: number;
-  holdings: number;
 }
 
-const TradingWindow: React.FC<TradingWindowProps> = ({
-  userState,
-  setUserState,
-  ticker,
-  availableCash,
-  holdings,
-}) => {
+const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
   const [quantity, setQuantity] = useState(0);
   const [buy_or_sell, set_buy_or_sell] = useState<"BUY" | "SELL">("BUY");
   const [showWarning, setShowWarning] = useState(false);
-  const [showLoading, setLoading] = useState(false);
-
+  const [isWaitExc, setWaitExec] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [isInitLoad, setInitLoad] = useState(true);
+  const [isInitFailed, setInitFailed] = useState(false);
+  const [preTradePrice, setPreTradePrice] = useState(0);
+  const [preTradeHolding, setPreTradeHolding] = useState(0);
+  const [preTradeBalance, setPreTradeBalance] = useState(0);
 
   const increment = () => setQuantity((prev) => prev + 1);
   const decrement = () => setQuantity((prev) => (prev > 0 ? prev - 1 : 0));
@@ -83,25 +67,58 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
   const handleExecute = () => {
     if (quantity <= 0) {
       setShowWarning(true);
+      return;
     }
+
     console.log("Execute trade:", { buy_or_sell, ticker, quantity });
-    setLoading(true);
-    trade(buy_or_sell, ticker, quantity).then((res) => {
+    setWaitExec(true);
+    trade(
+      buy_or_sell,
+      ticker,
+      quantity,
+      preTradeBalance,
+      preTradeHolding,
+      preTradePrice
+    ).then((res) => {
       console.log(res);
       if (res?.success) setMessage(res.message);
       else res && setMessage(res.message);
       setShowWarning(false); // reset warning
-      setLoading(false);
+      setWaitExec(false);
     });
   };
 
+  // Load live cash balance and market price
+  useEffect(() => {
+    let cash_fetcher = fetch("api/holdings/cash")
+      .then((res) => res.json())
+      .then((data) => setPreTradeBalance(data.amount));
+    let holding_fetcher = fetch(`api/holdings/${ticker}`)
+      .then((res) => res.json())
+      .then((data) => setPreTradeHolding(data.amount));
+    let quote_fetcher = fetch(`api/quote/${ticker}`)
+      .then((res) => res.json())
+      .then((data) => setPreTradePrice(data.price));
+    Promise.all([cash_fetcher, holding_fetcher, quote_fetcher])
+      .then(() => {
+        setInitLoad(false);
+      })
+      .catch(() => setInitFailed(true));
+  }, []);
+
+  if (isInitLoad) return <p>Loading...</p>;
+  if (isInitFailed) return <p>No pre trade data</p>;
   return (
     <div className="max-w-md mx-auto flex flex-col align-center p-6 space-y-4 bg-white">
       <h2 className="text-xl font-bold text-center">Market Order: {ticker}</h2>
 
-      <div className="flex justify-between text-sm text-gray-600">
-        <div>Available Cash: ${availableCash.toFixed(2)}</div>
-        <div>Holdings: {holdings} shares</div>
+      <div className="flex flex-col justify-between text-sm text-gray-600">
+        <div>Available Cash: ${preTradeBalance} </div>
+        <div>
+          Holdings: {preTradeHolding} shares (Market value:$
+          {preTradePrice * preTradeHolding}){" "}
+        </div>
+        <div>Spot price: ${preTradePrice}</div>
       </div>
 
       <div className="flex items-center justify-center gap-2">
@@ -159,11 +176,11 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
         Execute
       </button>
       {showWarning && (
-        <p className="text-red-600 text-sm font-medium animate-pulse">
+        <p className="text-red-600 text-sm font-medium">
           ⚠️ Invalid trade amount. Please enter a positive number.
         </p>
       )}
-      {showLoading && (
+      {isWaitExc && (
         <p className="text-sm font-medium animate-pulse">
           Submitted to broker... Hang on for a sec
         </p>
