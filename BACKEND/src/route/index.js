@@ -4,6 +4,7 @@ const cors = require('cors');
 const assetRoute = require('./assetRoute');
 const transactionRoute = require('./transactionRoute');
 const holdingRoute = require('./holdingRoute');
+const balanceRoute = require('./balanceRoute');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use('/transactions', transactionRoute);
 app.use('/assets', assetRoute);
 // app.use('/balance', balanceRoute);
 app.use('/holdings', holdingRoute);
+app.use('/balance', balanceRoute);
 
 // Fallback for undefined routes (optional)
 app.use((req, res) => {
