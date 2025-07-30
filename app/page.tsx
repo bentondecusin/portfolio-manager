@@ -13,7 +13,7 @@ export default function Home() {
   const [user, setUser] = useState({});
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
   const [trendSymbol, setTrendSymbol] = useState("AAPL");
-  const [amount, setAmount] = useState(0);
+  const [isTopUpDone, setIsTopUpDone] = useState(true);
 
   return (
     <div>
@@ -29,7 +29,10 @@ export default function Home() {
       <Navbar />
       <div className="container mx-auto p-4 flex">
         <div className="w-1/2 pr-2 flex flex-col gap-4">
-          <AccountCard amount={amount} setAmount={setAmount} />
+          <AccountCard 
+            isTopUpDone={isTopUpDone}
+            setIsTopUpDone={setIsTopUpDone}
+          />
           <PriceTrend symbol={trendSymbol} />
         </div>
         <div className="w-1/2 h-1/3 pl-2">
