@@ -35,7 +35,7 @@ const PortfolioList = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const res = await fetch("/api/transactions");
+        const res = await fetch("http://localhost:8080/transactions");
         const data = await res.json();
         setTransactions(data);
       } catch (error) {
@@ -56,7 +56,7 @@ const PortfolioList = () => {
         const symbol = transaction.symbol;
         const quantity = parseFloat(transaction.quantity);
         const price = parseFloat(transaction.price);
-        const isBuy = transaction.txn_type === "Buy";
+        const isBuy = transaction.txn_type === "buy";
 
         if (!holdingsMap.has(symbol)) {
           holdingsMap.set(symbol, {

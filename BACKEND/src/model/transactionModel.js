@@ -27,8 +27,8 @@ async function selectAllTxnByDate(date) {
 
 // POST methods
 async function insertTxn(txn) {
-  const { symbol, tickName, txnType, quantity, price, txnTs } = txn;
-
+  const { symbol, tickName, quantity, price, txnTs } = txn;
+  const txnType = txn.txnType ? txn.txnType.toLowerCase() : undefined;
   const [res] = await db.query(
     `INSERT INTO transactions
        (symbol, tick_name, txn_type, quantity, price, txn_ts)
@@ -92,7 +92,7 @@ module.exports = {
   selectAllTxnBySymbol,
   selectAllTxnByDate,
   updateTxnById,
-  upsertTxnById,
+  // upsertTxnById,
   deleteTxnById,
   getHoldings,
 };

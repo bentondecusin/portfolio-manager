@@ -12,11 +12,10 @@ import {
 import TopupForm from './TopUpForm';
 
 interface TopUpProps {
-    amount: string;
-    setAmount: (value: string) => void;
+    setIsTopUpDone?: (value: boolean) => void;
 }
 
-const TopUp: React.FC<TopUpProps> = ({ amount, setAmount }) => {
+const TopUp: React.FC<TopUpProps> = ({ setIsTopUpDone }) => {
     const [open, setOpen] = React.useState(false)
 
     const handleClose = () => {
@@ -36,7 +35,10 @@ const TopUp: React.FC<TopUpProps> = ({ amount, setAmount }) => {
                             Add funds to your account using Stripe
                         </DialogDescription>
                     </DialogHeader>
-                    <TopupForm amount={amount} setAmount={setAmount} onClose={handleClose} />
+                    <TopupForm 
+                        onClose={handleClose} 
+                        setIsTopUpDone={setIsTopUpDone}
+                    />
                 </DialogContent>
             </Dialog>
         </div>

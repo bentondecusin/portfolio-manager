@@ -1,58 +1,47 @@
-// src/controllers/assetController.js
+// src/controllers/assetController.js (Database Version)
 
-// If you’re on Node <18, uncomment:
-// const fetch = require('node-fetch');
-
-const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
-if (!API_KEY) {
-  console.error('Missing ALPHA_VANTAGE_API_KEY; set it in your env');
-  process.exit(1);
-}
-
-/**
- * Helper to fetch JSON and throw on HTTP errors.
- */
-async function fetchJSON(url) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-  }
-  return res.json();
-}
+const db = require('../db');
+const { fetchAndStoreLiveQuote, fetchAndStoreDailyHistory } = require('../service/assetService');
 
 /**
  * GET /assets/:symbol/live
- * Uses the GLOBAL_QUOTE endpoint.
+ * Gets live quote from database, with fallback to API if data is stale
  */
 async function getAssetLive(req, res, next) {
   try {
     const { symbol } = req.params;
-    const url = new URL('https://www.alphavantage.co/query');
-    url.searchParams.set('function', 'GLOBAL_QUOTE');
-    url.searchParams.set('symbol', symbol);
-    url.searchParams.set('apikey', API_KEY);
 
-    const data = await fetchJSON(url.toString());
-    const q = data['Global Quote'];
-    if (!q) {
-      return res.status(502).json({ error: `No quote data for ${symbol}`, raw: data });
+    // Try to get from database first
+    const [rows] = await db.execute(
+      `SELECT * FROM asset_quotes_live 
+       WHERE symbol = ? 
+       ORDER BY last_updated DESC 
+       LIMIT 1`,
+      [symbol]
+    );
+
+    if (rows.length == 0) {
+      res.status(404).json({ error: `No live quote found for ${symbol}` });
+    } else {
+      res.json(rows[0]);
     }
-    console.log(`Fetched live quote for ${symbol}:`, q);
+  } catch (err) {
+    next(err);
+  }
+}
 
-    const result = {
-      symbol:           q['01. symbol'],
-      open:             parseFloat(q['02. open']),
-      high:             parseFloat(q['03. high']),
-      low:              parseFloat(q['04. low']),
-      price:            parseFloat(q['05. price']),
-      volume:           parseInt(q['06. volume'], 10),
-      latestTradingDay: q['07. latest trading day'],
-      previousClose:    parseFloat(q['08. previous close']),
-      change:           parseFloat(q['09. change']),
-      changePercent:    q['10. change percent'],
-    };
+async function getAllAssetsLive(req, res, next) {
+  try {
+    const [rows] = await db.execute(
+      `SELECT * FROM asset_quotes_live 
+       ORDER BY last_updated DESC`
+    );
 
-    res.json(result);
+    if (rows.length === 0) {
+      res.status(404).json({ error: 'No live quotes found' });
+    } else {
+      res.json(rows);
+    }
   } catch (err) {
     next(err);
   }
@@ -67,7 +56,7 @@ async function getAssetLive(req, res, next) {
 async function getAssetHistory(req, res, next) {
   try {
     const { symbol } = req.params;
-    const type  = req.query.type  || 'daily'; // intraday | daily
+    const type = req.query.type || 'daily'; // intraday | daily
     const range = req.query.range || 'month'; // week | month
 
     const now = new Date();
@@ -81,58 +70,149 @@ async function getAssetHistory(req, res, next) {
     }
     const from = fromDate.toISOString().slice(0, 10);
 
-    let url;
-    let dataKey;
-    let rawData;
+    let query;
+    let params;
+    let tableName;
+    let dateColumn;
 
     if (type === 'intraday') {
-      // Use TIME_SERIES_INTRADAY with 5-minute intervals
-      url = new URL('https://www.alphavantage.co/query');
-      url.searchParams.set('function', 'TIME_SERIES_INTRADAY');
-      url.searchParams.set('symbol', symbol);
-      url.searchParams.set('interval', '5min');
-      url.searchParams.set('apikey', API_KEY);
-      url.searchParams.set('outputsize', 'compact'); // last ~100 points
-      rawData = await fetchJSON(url.toString());
-      dataKey = Object.keys(rawData).find(k => k.includes('Time Series'));
+      tableName = 'asset_prices_intraday';
+      dateColumn = 'price_datetime';
+      query = `
+        SELECT 
+          DATE_FORMAT(price_datetime, '%Y-%m-%d %H:%i:%s') as date,
+          open_price as open,
+          high_price as high,
+          low_price as low,
+          close_price as close,
+          volume
+        FROM ${tableName}
+        WHERE symbol = ? 
+        AND DATE(price_datetime) >= ? 
+        AND DATE(price_datetime) <= ?
+        ORDER BY price_datetime ASC
+      `;
+      params = [symbol, from, today];
     } else {
-      // Use TIME_SERIES_DAILY for week/month
-      url = new URL('https://www.alphavantage.co/query');
-      url.searchParams.set('function', 'TIME_SERIES_DAILY');
-      url.searchParams.set('symbol', symbol);
-      url.searchParams.set('apikey', API_KEY);
-      url.searchParams.set('outputsize', 'compact');
-      rawData = await fetchJSON(url.toString());
-      dataKey = 'Time Series (Daily)';
+      tableName = 'asset_prices_daily';
+      dateColumn = 'price_date';
+      query = `
+        SELECT 
+          price_date as date,
+          open_price as open,
+          high_price as high,
+          low_price as low,
+          close_price as close,
+          volume
+        FROM ${tableName}
+        WHERE symbol = ? 
+        AND price_date >= ? 
+        AND price_date <= ?
+        ORDER BY price_date ASC
+      `;
+      params = [symbol, from, today];
     }
 
-    const series = rawData[dataKey];
-    if (!series) {
-      return res.status(502).json({ error: `No time series returned`, raw: rawData });
-    }
+    const [rows] = await db.execute(query, params);
 
-    // Filter & format
-    const result = Object.entries(series)
-      .filter(([date]) => date >= from && date <= today)
-      .map(([date, v]) => ({
-        date,
-        open:   parseFloat(v['1. open']),
-        high:   parseFloat(v['2. high']),
-        low:    parseFloat(v['3. low']),
-        close:  parseFloat(v['4. close']),
-        volume: parseInt(v['5. volume'], 10),
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    console.log(`Fetched ${result.length} data points for ${symbol} (${type}, ${range}) from ${from} to ${today}, data: ${JSON.stringify(result)}`);
-    res.json({
+    const result = {
       symbol,
       type,
       range,
       from,
       to: today,
-      data: result,
+      data: rows
+    };
+
+    if (rows.length === 0) {
+      res.status(404).json({ error: `No historical data found for ${symbol} (${type}, ${range})` });
+    } else {
+      res.json(result);
+    }
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /assets/:symbol/sync
+ * Manual trigger to sync data for a specific symbol
+ */
+async function syncAssetData(req, res, next) {
+  try {
+    const { symbol } = req.params;
+    const { type = 'all' } = req.query; // all, live, daily, intraday
+
+    const results = {};
+
+    if (type === 'all' || type === 'live') {
+      console.log(`🔄 Manual sync: fetching live data for ${symbol}`);
+      results.live = await fetchAndStoreLiveQuote(symbol);
+    }
+
+    if (type === 'all' || type === 'daily') {
+      console.log(`🔄 Manual sync: fetching daily data for ${symbol}`);
+      results.daily = await fetchAndStoreDailyHistory(symbol, 100);
+    }
+
+    const allSuccess = Object.values(results).every(r => r.success);
+    const statusCode = allSuccess ? 200 : 207; // 207 = Multi-Status
+
+    res.status(statusCode).json({
+      symbol,
+      sync_type: type,
+      timestamp: new Date().toISOString(),
+      results
     });
+
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /assets/health
+ * Check the health of asset data (freshness, coverage, etc.)
+ */
+async function getAssetsHealth(req, res, next) {
+  try {
+    // Get summary stats
+    const [liveStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as total_symbols,
+        COUNT(CASE WHEN last_updated >= DATE_SUB(NOW(), INTERVAL 10 MINUTE) THEN 1 END) as fresh_quotes,
+        COUNT(CASE WHEN last_updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 1 END) as stale_quotes,
+        AVG(TIMESTAMPDIFF(MINUTE, last_updated, NOW())) as avg_age_minutes
+      FROM asset_quotes_live
+    `);
+
+    const [dailyStats] = await db.execute(`
+      SELECT 
+        COUNT(DISTINCT symbol) as symbols_with_daily_data,
+        COUNT(*) as total_daily_records,
+        MAX(price_date) as latest_date,
+        MIN(price_date) as earliest_date
+      FROM asset_prices_daily
+    `);
+
+    const [recentErrors] = await db.execute(`
+      SELECT 
+        COUNT(*) as error_count,
+        COUNT(CASE WHEN status = 'rate_limited' THEN 1 END) as rate_limited_count
+      FROM api_fetch_log 
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
+      AND status IN ('error', 'rate_limited')
+    `);
+
+    const health = {
+      timestamp: new Date().toISOString(),
+      live_quotes: liveStats[0],
+      daily_data: dailyStats[0],
+      recent_errors: recentErrors[0],
+      status: (liveStats[0].fresh_quotes > 0 && recentErrors[0].error_count < 5) ? 'healthy' : 'degraded'
+    };
+
+    res.json(health);
 
   } catch (err) {
     next(err);
@@ -141,5 +221,8 @@ async function getAssetHistory(req, res, next) {
 
 module.exports = {
   getAssetLive,
+  getAllAssetsLive,
   getAssetHistory,
+  syncAssetData,
+  getAssetsHealth,
 };

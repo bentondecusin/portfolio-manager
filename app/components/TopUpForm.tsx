@@ -4,16 +4,15 @@ import { Label } from '@/components/ui/label'
 import React from 'react'
 
 interface TopupFormProps {
-    amount: string;
-    setAmount: (value: string) => void;
     onClose: () => void;
+    setIsTopUpDone?: (value: boolean) => void;
 }
 
-const TopupForm: React.FC<TopupFormProps> = ({ amount, setAmount, onClose }) => {
+const TopupForm: React.FC<TopupFormProps> = ({ onClose, setIsTopUpDone }) => {
     const [loading, setLoading] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
     const [success, setSuccess] = React.useState(false)
-    const [inputValue, setInputValue] = React.useState(amount)
+    const [inputValue, setInputValue] = React.useState('')
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.target.value)
@@ -30,15 +29,24 @@ const TopupForm: React.FC<TopupFormProps> = ({ amount, setAmount, onClose }) => 
         setError(null)
 
         try {
-            // Simulate API call delay
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            
-            // Simulate successful balance update
-            setSuccess(true)
-            setAmount((Number(inputValue) + Number(amount)).toString()) // Update amount with the new value
+            const response = await fetch('http://localhost:8080/balance', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ amount: Number(inputValue) }),
+            });
 
-            // You can add logic here to update user balance in your app state
-            console.log(`Balance updated with $${inputValue}`)
+            if (!response.ok) {
+                throw new Error('Failed to update balance');
+            }
+
+            console.log("Top up response:", response);
+            
+            // Mark topup as done to trigger balance refresh
+            if (setIsTopUpDone) {
+                setIsTopUpDone(true);
+            }
             
             // Close dialog after successful submission
             setTimeout(() => {
