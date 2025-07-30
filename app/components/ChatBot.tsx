@@ -57,13 +57,24 @@ const ChatBot = () => {
             if (hasYesterday) {
                 if (detectedSymbol) {
                     try {
+                        console.log('Fetching specific asset history for:', detectedSymbol);
                         const url = new URL(`http://localhost:8080/assets/${detectedSymbol}/history`);
                         url.searchParams.set('type', 'daily');
                         url.searchParams.set('range', 'week');
 
+                        console.log('Request URL:', url.toString());
                         const resp = await fetch(url.toString())    
-                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+                        console.log('Response status:', resp.status);
+                        console.log('Response ok:', resp.ok);
+                        
+                        if (!resp.ok) {
+                            const errorText = await resp.text();
+                            console.error('HTTP Error:', resp.status, errorText);
+                            throw new Error(`HTTP ${resp.status}: ${errorText}`);
+                        }
+                        
                         const payload = await resp.json()
+                        console.log('Response payload:', payload);
                         const list = payload.data || []
 
                         if (list.length < 2) {
@@ -79,27 +90,37 @@ const ChatBot = () => {
                         } 
                     } catch (error) {
                         console.error('Error fetching asset data:', error);
-                        aiResponseText = `Sorry, there was an error fetching ${detectedSymbol}'s data. Please try again.`;
+                        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                        aiResponseText = `Sorry, there was an error fetching ${detectedSymbol}'s data. Error: ${errorMessage}`;
                     }
                 } else {
                     try {
+                        console.log('Fetching all assets history...');
                         const url = new URL(`http://localhost:8080/assets/history`);
                         url.searchParams.set('type', 'daily');
                         url.searchParams.set('range', 'week');
 
-                        const resp = await fetch(url.toString())
+                        console.log('Request URL:', url.toString());
+                        const resp = await fetch(url.toString());
+                        console.log('Response status:', resp.status);
+                        console.log('Response ok:', resp.ok);
+                        
                         if (resp.ok) {
                             const data = await resp.json();
+                            console.log('Response data:', data);
                             aiResponseText = `Here's yesterday's data for all assets:\n\n` +
                                 `Date: ${data.date || 'Yesterday'}\n` +
                                 `Total Assets: ${data.assets?.length ?? 0}\n` +
                                 `Data Points: ${data.data?.length ?? 0}`;
                         } else {
-                            aiResponseText = `Sorry, I couldn't fetch yesterday's data. Please try again.`;
+                            const errorText = await resp.text();
+                            console.error('HTTP Error:', resp.status, errorText);
+                            aiResponseText = `Sorry, I couldn't fetch yesterday's data. HTTP ${resp.status}: ${errorText}`;
                         }
                     } catch (error) {
                         console.error('Error fetching yesterday data:', error);
-                        aiResponseText = `Sorry, there was an error fetching yesterday's data. Please try again.`;
+                        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                        aiResponseText = `Sorry, there was an error fetching yesterday's data. Error: ${errorMessage}`;
                     }
                 }
             } else {
