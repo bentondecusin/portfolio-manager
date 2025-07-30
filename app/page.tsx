@@ -10,7 +10,7 @@ import AccountCard from "./components/AccountCard";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [user, setUser] = useState({});
+  const [userState, setUserState] = useState({});
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
   const [trendSymbol, setTrendSymbol] = useState("AAPL");
 
@@ -22,6 +22,8 @@ export default function Home() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             preTradeSymbol={preTradeSymbol}
+            userState={userState}
+            setUserState={setUserState}
           ></TradeWindow>
         </div>
       )}

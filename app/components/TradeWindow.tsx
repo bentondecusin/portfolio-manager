@@ -1,9 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { trade } from "../actions";
 
-export default function TradeWindow({ isOpen, onClose, preTradeSymbol }) {
+export default function TradeWindow({
+  isOpen,
+  onClose,
+  preTradeSymbol,
+  userState,
+  setUserState,
+}) {
   const [isBuy, setBuy] = useState("fal");
   return (
     <AnimatePresence>
@@ -32,6 +39,8 @@ export default function TradeWindow({ isOpen, onClose, preTradeSymbol }) {
               ticker={preTradeSymbol}
               availableCash={12000}
               holdings={50}
+              userState={userState}
+              setUserState={setUserState}
             />
           </motion.div>
         </motion.div>
@@ -44,17 +53,24 @@ type TradeMode = "BUY" | "SELL";
 
 interface TradingWindowProps {
   ticker: string;
+
   availableCash: number;
   holdings: number;
 }
 
 const TradingWindow: React.FC<TradingWindowProps> = ({
+  userState,
+  setUserState,
   ticker,
   availableCash,
   holdings,
 }) => {
   const [quantity, setQuantity] = useState(0);
   const [buy_or_sell, set_buy_or_sell] = useState<"BUY" | "SELL">("BUY");
+  const [showWarning, setShowWarning] = useState(false);
+  const [showLoading, setLoading] = useState(false);
+
+  const [message, setMessage] = useState("");
 
   const increment = () => setQuantity((prev) => prev + 1);
   const decrement = () => setQuantity((prev) => (prev > 0 ? prev - 1 : 0));
@@ -65,7 +81,18 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
   };
 
   const handleExecute = () => {
+    if (quantity <= 0) {
+      setShowWarning(true);
+    }
     console.log("Execute trade:", { buy_or_sell, ticker, quantity });
+    setLoading(true);
+    trade(buy_or_sell, ticker, quantity).then((res) => {
+      console.log(res);
+      if (res?.success) setMessage(res.message);
+      else res && setMessage(res.message);
+      setShowWarning(false); // reset warning
+      setLoading(false);
+    });
   };
 
   return (
@@ -131,6 +158,18 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
       >
         Execute
       </button>
+      {showWarning && (
+        <p className="text-red-600 text-sm font-medium animate-pulse">
+          ⚠️ Invalid trade amount. Please enter a positive number.
+        </p>
+      )}
+      {showLoading && (
+        <p className="text-sm font-medium animate-pulse">
+          Submitted to broker... Hang on for a sec
+        </p>
+      )}
+
+      {message && <p>{message}</p>}
     </div>
   );
 };
