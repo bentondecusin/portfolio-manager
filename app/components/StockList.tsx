@@ -18,15 +18,15 @@ const temp: {
   name: string;
   price: string;
 }[] = [
-  { symbol: "AAPL", name: "Apple Inc.", price: "$150.00" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: "$2800.00" },
-  { symbol: "AMZN", name: "Amazon.com Inc.", price: "$3400.00" },
-  { symbol: "MSFT", name: "Microsoft Corporation", price: "$299.00" },
-  { symbol: "AAPL", name: "Apple Inc.", price: "$150.00" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: "$2800.00" },
-  { symbol: "AMZN", name: "Amazon.com Inc.", price: "$3400.00" },
-  { symbol: "MSFT", name: "Microsoft Corporation", price: "$299.00" },
-];
+    { symbol: "AAPL", name: "Apple Inc.", price: "$150.00" },
+    { symbol: "GOOGL", name: "Alphabet Inc.", price: "$2800.00" },
+    { symbol: "AMZN", name: "Amazon.com Inc.", price: "$3400.00" },
+    { symbol: "MSFT", name: "Microsoft Corporation", price: "$299.00" },
+    { symbol: "AAPL", name: "Apple Inc.", price: "$150.00" },
+    { symbol: "GOOGL", name: "Alphabet Inc.", price: "$2800.00" },
+    { symbol: "AMZN", name: "Amazon.com Inc.", price: "$3400.00" },
+    { symbol: "MSFT", name: "Microsoft Corporation", price: "$299.00" },
+  ];
 type TradeButtonProps = {
   setIsModalOpen: (open: boolean) => void;
   setPreTradeSymbol: (symbol: string) => void;
@@ -58,7 +58,7 @@ const StockList: React.FC<StockListProps> = ({ setIsModalOpen, setTrendSymbol, s
   let mkt_prix = data;
   console.log("mkt_prix", mkt_prix);
   if (error) console.error(error);
-  
+
   return (
     <div>
       <h2>Market Watchlist</h2>
@@ -83,7 +83,12 @@ const StockList: React.FC<StockListProps> = ({ setIsModalOpen, setTrendSymbol, s
             </TableHeader>
             <TableBody>
               {mkt_prix.map((stock, idx) => (
-                <TableRow key={idx + stock.symbol}>
+                <TableRow
+                  key={idx + stock.symbol}
+                  onClick={() => {
+                    setTrendSymbol(stock.symbol);
+                  }}
+                >
                   <TableCell className="font-medium">{stock.symbol}</TableCell>
                   <TableCell>Stock</TableCell>
                   <TableCell>${parseFloat(stock.current_price).toFixed(2)}</TableCell>
