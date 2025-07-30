@@ -14,44 +14,7 @@ import TableWrapper from "../table_wrapper";
 import TradeButton from "./TradeButton";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
-const temp: {
-  symbol: string;
-  name: string;
-  price: string;
-}[] = [
-  { symbol: "AAPL", name: "Apple Inc.", price: "$150.00" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: "$2800.00" },
-  { symbol: "AMZN", name: "Amazon.com Inc.", price: "$3400.00" },
-  { symbol: "MSFT", name: "Microsoft Corporation", price: "$299.00" },
-  { symbol: "AAPL", name: "Apple Inc.", price: "$150.00" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: "$2800.00" },
-  { symbol: "AMZN", name: "Amazon.com Inc.", price: "$3400.00" },
-  { symbol: "MSFT", name: "Microsoft Corporation", price: "$299.00" },
-];
-type TradeButtonProps = {
-  setIsModalOpen: (open: boolean) => void;
-  setPreTradeSymbol: (symbol: string) => void;
-  symbol: string;
-};
 
-const TradeButton: React.FC<TradeButtonProps> = ({
-  setIsModalOpen,
-  setPreTradeSymbol,
-  symbol,
-}) => {
-  return (
-    <Button
-      onClick={() => {
-        setIsModalOpen(true);
-        setPreTradeSymbol(symbol);
-      }}
-      name="close"
-      className="px-4 py-2 text-white rounded-xl cursor-pointer hover:bg-blue-950"
-    >
-      Trade
-    </Button>
-  );
-};
 type StockListProps = {
   setIsModalOpen: (open: boolean) => void;
   setTrendSymbol: (symbol: string) => void;
