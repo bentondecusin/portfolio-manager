@@ -1,0 +1,485 @@
+openapi: "3.0.3"
+info:
+  title: Portfolio Management API
+  version: "1.0.0"
+  description: |
+    REST API for a single‑user financial portfolio.
+    Supports real‑time intraday pricing, end‑of‑day snapshots, diversity calculations, and full trade history.
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+  - url: https://portfolio.example.com/api/v1
+    description: Production server
+components:
+  parameters:
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    HoldingId:
+      name: holdingId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    TxnId:
+      name: txnId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    Symbol:
+      name: symbol
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    Asset:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        symbol:
+          type: string
+          example: AAPL
+        name:
+          type: string
+        type:
+          type: string
+          enum: [STOCK, BOND, CASH, ETF, CRYPTO]
+        currency:
+          type: string
+          example: USD
+      required: [symbol, name, type, currency]
+    Holding:
+      type: object
+      properties:
+        holdingId:
+          type: integer
+          format: int64
+        asset:
+          $ref: "#/components/schemas/Asset"
+        quantity:
+          type: number
+          format: double
+        avgCost:
+          type: number
+          format: double
+        openedTs:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [asset, quantity, avgCost]
+    HoldingLive:
+      allOf:
+        - $ref: "#/components/schemas/Holding"
+        - type: object
+          properties:
+            marketPrice:
+              type: number
+              format: double
+            marketValue:
+              type: number
+              format: double
+            returnSinceOpenPct:
+              type: number
+              format: double
+            intradayChangePct:
+              type: number
+              format: double
+            diversityWeight:
+              type: number
+              format: double
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        asset:
+          $ref: "#/components/schemas/Asset"
+        txnType:
+          type: string
+          enum: [BUY, SELL, DEPOSIT, WITHDRAW]
+        quantity:
+          type: number
+          format: double
+        price:
+          type: number
+          format: double
+        txnTs:
+          type: string
+          format: date-time
+      required: [asset, txnType, quantity, price, txnTs]
+    PortfolioLive:
+      type: object
+      properties:
+        asOf:
+          type: string
+          format: date-time
+        totalValue:
+          type: number
+          format: double
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/HoldingLive"
+    PortfolioEod:
+      type: object
+      properties:
+        asOf:
+          type: string
+          format: date
+        totalValue:
+          type: number
+          format: double
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Holding"
+    Allocation:
+      type: object
+      properties:
+        symbol:
+          type: string
+        diversityWeight:
+          type: number
+          format: double
+    PricePoint:
+      type: object
+      properties:
+        ts:
+          type: string
+          format: date-time
+        price:
+          type: number
+          format: double
+    PortfolioPoint:
+      type: object
+      properties:
+        ts:
+          type: string
+          format: date-time
+        totalValue:
+          type: number
+          format: double
+  responses:
+    NotFound:
+      description: Resource not found
+paths:
+  /assets:
+    get:
+      summary: List assets
+      tags: [Assets]
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+          description: Filter by asset type
+        - in: query
+          name: symbol
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Array of assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Asset"
+    post:
+      summary: Create asset
+      tags: [Assets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Asset"
+      responses:
+        "201":
+          description: Created asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+  /assets/{assetId}:
+    parameters:
+      - $ref: "#/components/parameters/AssetId"
+    get:
+      tags: [Assets]
+      summary: Get asset by ID
+      responses:
+        "200":
+          description: Single asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Assets]
+      summary: Update asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Asset"
+      responses:
+        "200":
+          description: Updated asset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+    delete:
+      tags: [Assets]
+      summary: Delete asset
+      responses:
+        "204":
+          description: Deleted
+  /holdings:
+    get:
+      tags: [Holdings]
+      summary: List holdings
+      responses:
+        "200":
+          description: Array of holdings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Holding"
+    post:
+      tags: [Holdings]
+      summary: Create holding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Holding"
+      responses:
+        "201":
+          description: Created holding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Holding"
+  /holdings/{holdingId}:
+    parameters:
+      - $ref: "#/components/parameters/HoldingId"
+    get:
+      tags: [Holdings]
+      summary: Get holding
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Holding"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Holdings]
+      summary: Update holding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Holding"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Holding"
+    delete:
+      tags: [Holdings]
+      summary: Delete holding
+      responses:
+        "204":
+          description: Deleted
+  /transactions:
+    get:
+      tags: [Transactions]
+      summary: List transactions
+      parameters:
+        - in: query
+          name: asset
+          schema:
+            type: string
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      tags: [Transactions]
+      summary: Create transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Transaction"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+  /transactions/{txnId}:
+    parameters:
+      - $ref: "#/components/parameters/TxnId"
+    get:
+      tags: [Transactions]
+      summary: Get transaction
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Transactions]
+      summary: Delete transaction
+      responses:
+        "204":
+          description: Deleted
+  /portfolio/live:
+    get:
+      tags: [Portfolio]
+      summary: Real‑time snapshot
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioLive"
+  /portfolio/eod:
+    get:
+      tags: [Portfolio]
+      summary: End‑of‑day snapshot
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          description: YYYY‑MM‑DD (defaults to most recent close)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioEod"
+  /portfolio/allocations:
+    get:
+      tags: [Portfolio]
+      summary: Current diversity weights
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Allocation"
+  /prices/{symbol}/intraday:
+    parameters:
+      - $ref: "#/components/parameters/Symbol"
+    get:
+      tags: [Prices]
+      summary: Intraday price series
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PricePoint"
+  /performance:
+    get:
+      tags: [Performance]
+      summary: Portfolio value over time
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+            example: 1y
+        - in: query
+          name: granularity
+          schema:
+            type: string
+            enum: [intraday, daily, weekly]
+            default: daily
+        - in: query
+          name: interval
+          schema:
+            type: string
+            enum: [daily, weekly]
+            default: daily
+      responses:
+        "200":
+          description: Portfolio time‑series and optional benchmark
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  series:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PortfolioPoint"
+                  benchmark:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PricePoint"

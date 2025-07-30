@@ -43,6 +43,7 @@ BEFORE INSERT ON transactions
 FOR EACH ROW
 BEGIN
   DECLARE cur_qty DECIMAL(20,2) DEFAULT 0;
+  DECLARE err_msg TEXT;
 
   -- Normalize txn_type casing if needed
   SET NEW.txn_type = CASE
@@ -71,8 +72,8 @@ BEGIN
     WHERE symbol = NEW.symbol;
 
     IF cur_qty < NEW.quantity THEN
-      SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = CONCAT('Insufficient shares to sell for ', NEW.symbol);
+      SET err_msg = CONCAT('Insufficient shares to sell for ', NEW.symbol);
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = err_msg;
     END IF;
   END IF;
 END$$
