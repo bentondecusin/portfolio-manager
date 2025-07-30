@@ -61,7 +61,6 @@ const StockList: React.FC<StockListProps> = ({ setIsModalOpen, setTrendSymbol, s
 
   return (
     <div>
-      <h2>Market Watchlist</h2>
       {isLoading && <div>Loading</div>}
       {error && (
         <div className="text-red-500">

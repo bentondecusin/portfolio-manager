@@ -29,7 +29,9 @@ const TransactionHistory = () => {
         const res = await fetch('http://localhost:8080/transactions');
         let data = await res.json();
 
-        data = data.sort((a, b) => new Date(b.txn_ts).getTime() - new Date(a.txn_ts).getTime());
+        data = (data as Transaction[]).sort(
+          (a: Transaction, b: Transaction) => new Date(b.txn_ts).getTime() - new Date(a.txn_ts).getTime()
+        );
         setTransactions(data);
       } catch (error) {
         console.error('Failed to fetch transactions:', error);
@@ -46,7 +48,6 @@ const TransactionHistory = () => {
 
   return (
     <div>
-      <h2>Transaction History</h2>
       <TableWrapper>
         <Table>
           <TableHeader>
@@ -65,7 +66,7 @@ const TransactionHistory = () => {
               <TableRow key={transaction.id}>
                 <TableCell className="font-medium">{transaction.symbol}</TableCell>
                 <TableCell>{transaction.tick_name}</TableCell>
-                <TableCell className={transaction.txn_type === 'Buy' ? 'text-green-600' : 'text-red-600'}>
+                <TableCell className={transaction.txn_type === 'buy' ? 'text-green-600' : 'text-red-600'}>
                   {transaction.txn_type}
                 </TableCell>
                 <TableCell>{parseFloat(transaction.quantity).toFixed(0)}</TableCell>
