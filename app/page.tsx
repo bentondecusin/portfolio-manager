@@ -17,7 +17,7 @@ type Holding = {
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
-  const [trendSymbol, setTrendSymbol] = useState("AAPL");
+  const [trendSymbol, setTrendSymbol] = useState("NVDA");
   const [isTopUpDone, setIsTopUpDone] = useState(true);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [balance, setBalance] = useState<string>("0.00");

@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const data = await request.json();
-    console.log(data);
 
     // const sym = symbol.toUpperCase();
     const sql = process.env.DATABASE_URL && neon(process.env.DATABASE_URL);

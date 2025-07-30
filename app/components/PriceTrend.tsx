@@ -1,16 +1,29 @@
-"use client"
+"use client";
 
-import React from 'react'
-import useSWR from 'swr'
-import { CartesianGrid, XAxis, YAxis, ResponsiveContainer, ComposedChart, Bar } from "recharts"
+import React from "react";
+import useSWR from "swr";
+import {
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+} from "recharts";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+} from "@/components/ui/chart";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const chartConfig = {
   intervals: {
@@ -20,17 +33,17 @@ const chartConfig = {
     label: "Price",
     color: "var(--chart-1)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
-type CandleData = { 
-  date: string; 
-  open: number; 
-  high: number; 
-  low: number; 
-  close: number; 
+type CandleData = {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
   volume: number;
   color: string; // For candle color (green/red)
-}
+};
 
 interface ApiDataPoint {
   date: string;
@@ -57,29 +70,30 @@ interface PriceTrendProps {
 // Custom Candlestick component
 const Candlestick = (props: any) => {
   const { payload, x, y, width, height } = props;
-  
+
   if (!payload) return null;
-  
+
   const { open, high, low, close } = payload;
   const isPositive = close >= open;
-  
+
   // Calculate positions
   const candleWidth = Math.max(width * 0.6, 2);
   const candleX = x + (width - candleWidth) / 2;
-  
+
   // Wick (high-low line)
   const wickX = x + width / 2;
-  
+
   // Body height and position
-  const bodyHeight = Math.abs(close - open) * height / (high - low);
-  const bodyY = y + ((high - Math.max(open, close)) * height / (high - low));
-  
+  const bodyHeight = (Math.abs(close - open) * height) / (high - low);
+  const bodyY = y + ((high - Math.max(open, close)) * height) / (high - low);
+
   // Wick positions
   const highY = y;
   const lowY = y + height;
-  const topWickY = y + ((high - Math.max(open, close)) * height / (high - low));
-  const bottomWickY = y + ((high - Math.min(open, close)) * height / (high - low));
-  
+  const topWickY = y + ((high - Math.max(open, close)) * height) / (high - low);
+  const bottomWickY =
+    y + ((high - Math.min(open, close)) * height) / (high - low);
+
   return (
     <g>
       {/* High-Low wick */}
@@ -91,7 +105,7 @@ const Candlestick = (props: any) => {
         stroke={isPositive ? "#10b981" : "#ef4444"}
         strokeWidth={1}
       />
-      
+
       {/* Open-Close body */}
       <rect
         x={candleX}
@@ -111,9 +125,13 @@ const Candlestick = (props: any) => {
  * @param count Number of data points
  * @param startDate ISO string or Date object for the first date
  */
-export function generateMockChartData(count: number = 30, startDate: string | Date = new Date()): CandleData[] {
+export function generateMockChartData(
+  count: number = 30,
+  startDate: string | Date = new Date()
+): CandleData[] {
   const data: CandleData[] = [];
-  let baseDate = typeof startDate === "string" ? new Date(startDate) : new Date(startDate);
+  let baseDate =
+    typeof startDate === "string" ? new Date(startDate) : new Date(startDate);
   let lastClose = 100 + Math.random() * 20;
 
   for (let i = 0; i < count; i++) {
@@ -144,43 +162,25 @@ export function generateMockChartData(count: number = 30, startDate: string | Da
 }
 
 // SWR fetcher function
-const fetcher = async (url: string): Promise<ApiResponse> => {
+const fetcher = async (
+  url: string,
+  body: { type?: string; range?: string }
+): Promise<ApiResponse> => {
   const response = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
-  if (!response.ok) {
-    let errorMessage = `Failed to fetch data (${response.status})`;
-    
-    switch (response.status) {
-      case 404:
-        errorMessage = `Data not found`;
-        break;
-      case 429:
-        errorMessage = 'Rate limit exceeded. Please try again later';
-        break;
-      case 500:
-        errorMessage = 'Server error. Please try again later';
-        break;
-      case 503:
-        errorMessage = 'Service temporarily unavailable';
-        break;
-      default:
-        errorMessage = `HTTP error! status: ${response.status}`;
-    }
-    
-    throw new Error(errorMessage);
-  }
+  console.log("huh");
 
   const apiData: ApiResponse = await response.json();
-  
   if (!apiData.data || apiData.data.length === 0) {
     throw new Error(`No data available`);
   }
-  
+
+  console.log(apiData);
   return apiData;
 };
 
@@ -190,30 +190,39 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
   // Build API URL
   let apiUrl = null;
   if (symbol) {
-    let url = `http://localhost:8080/assets/${symbol}/history`;
+    let url = `/api/assets/${symbol}`;
     let params = new URLSearchParams();
-    
+
     if (days === 7) {
-      params.append('type', 'daily');
-      params.append('range', 'week');
+      params.append("type", "daily");
+      params.append("range", "week");
     } else if (days === 30) {
-      params.append('type', 'daily');
-      params.append('range', 'month');
+      params.append("type", "daily");
+      params.append("range", "month");
     } else {
-      params.append('type', 'intraday');
+      params.append("type", "intraday");
     }
-    
+
     const queryString = params.toString();
     apiUrl = queryString ? `${url}?${queryString}` : url;
   }
 
   // SWR hook for data fetching
-  const { data: rawData, error, isLoading, mutate } = useSWR(
-    apiUrl && symbol ? apiUrl : null,
-    fetcher
-  );
-
+  const {
+    data: rawData,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(apiUrl && symbol ? apiUrl : null, fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnMount: false,
+    revalidateOnReconnect: false,
+    refreshWhenOffline: false,
+    refreshWhenHidden: false,
+    refreshInterval: 0,
+  });
   // Transform API data to candlestick format
+  console.log(rawData);
   let chartData: CandleData[] = [];
   if (rawData?.data) {
     chartData = rawData.data.map((item: ApiDataPoint) => ({
@@ -223,9 +232,10 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
       low: item.low,
       close: item.close,
       volume: item.volume,
-      color: item.close >= item.open ? "#10b981" : "#ef4444"
+      color: item.close >= item.open ? "#10b981" : "#ef4444",
     }));
   }
+  console.log(chartData);
 
   // Manual refresh function (only for error cases)
   const handleRefresh = () => {
@@ -235,17 +245,17 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
   };
 
   const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
   };
 
   const formatVolume = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      notation: 'compact',
+    return new Intl.NumberFormat("en-US", {
+      notation: "compact",
       maximumFractionDigits: 1,
     }).format(value);
   };
@@ -255,32 +265,31 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 items-center">
           <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-            <CardTitle className="text-3xl">
-              {symbol}
-            </CardTitle>
+            <CardTitle className="text-3xl">{symbol}</CardTitle>
             <CardDescription>
-              Realtime trading data
+              Latest Trading Data from NYSE
+              <span className="text-red-600">(NYSE closed)</span>
             </CardDescription>
           </div>
           <div className="flex w-[50%] items-center mr-5">
             <Tabs defaultValue="day" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger 
-                  value="day" 
+                <TabsTrigger
+                  value="day"
                   onClick={() => setDays(1)}
                   className="text-xs"
                 >
                   1D
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="week" 
+                <TabsTrigger
+                  value="week"
                   onClick={() => setDays(7)}
                   className="text-xs"
                 >
                   1W
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="month" 
+                <TabsTrigger
+                  value="month"
                   onClick={() => setDays(30)}
                   className="text-xs"
                 >
@@ -298,8 +307,12 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
           <div className="flex items-center justify-center h-[400px] w-full">
             <div className="text-center space-y-2">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto"></div>
-              <p className="text-sm text-muted-foreground">Loading candlestick data...</p>
-              <p className="text-xs text-muted-foreground">Data will be cached for future use</p>
+              <p className="text-sm text-muted-foreground">
+                Loading candlestick data...
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Data will be cached for future use
+              </p>
             </div>
           </div>
         )}
@@ -308,9 +321,11 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         {error && !isLoading && (
           <div className="flex items-center justify-center h-[400px] w-full">
             <div className="text-center space-y-2">
-              <p className="text-destructive font-medium">Error loading chart data</p>
+              <p className="text-destructive font-medium">
+                Error loading chart data
+              </p>
               <p className="text-sm text-muted-foreground">{error.message}</p>
-              <button 
+              <button
                 onClick={handleRefresh}
                 className="text-sm text-primary hover:underline mt-2 px-3 py-1 border rounded"
               >
@@ -326,15 +341,17 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
             {/* Cache indicator */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center text-xs text-muted-foreground">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              {rawData?.data && rawData.data.length > 0 && (
-                <span className="flex items-center">
-                {rawData.data.length} points • {new Date(rawData.from).toLocaleDateString()} to {new Date(rawData.to).toLocaleDateString()}
-                </span>
-              )}
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                {rawData?.data && rawData.data.length > 0 && (
+                  <span className="flex items-center">
+                    {rawData.data.length} points •{" "}
+                    {new Date(rawData.from).toLocaleDateString()} to{" "}
+                    {new Date(rawData.to).toLocaleDateString()}
+                  </span>
+                )}
               </div>
             </div>
-            
+
             <div className="w-full h-[400px] mb-2 rounded-xl bg-muted/40 border shadow-inner flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
@@ -354,11 +371,11 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
                   <XAxis
                     dataKey="date"
                     tickFormatter={(value) => {
-                      const date = new Date(value)
+                      const date = new Date(value);
                       return date.toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
-                      })
+                      });
                     }}
                     interval="preserveStartEnd"
                     tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
@@ -367,7 +384,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
                     padding={{ left: 8, right: 8 }}
                   />
                   <YAxis
-                    domain={['dataMin - 1', 'dataMax + 1']}
+                    domain={["dataMin - 1", "dataMax + 1"]}
                     tickFormatter={(value) => `$${value.toFixed(0)}`}
                     tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                     axisLine={false}
@@ -390,29 +407,62 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
                             </p>
                             <div className="space-y-1 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Open:</span>
-                                <span className="font-medium">{formatPrice(data.open)}</span>
+                                <span className="text-muted-foreground">
+                                  Open:
+                                </span>
+                                <span className="font-medium">
+                                  {formatPrice(data.open)}
+                                </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">High:</span>
-                                <span className="font-medium text-green-600">{formatPrice(data.high)}</span>
+                                <span className="text-muted-foreground">
+                                  High:
+                                </span>
+                                <span className="font-medium text-green-600">
+                                  {formatPrice(data.high)}
+                                </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Low:</span>
-                                <span className="font-medium text-red-600">{formatPrice(data.low)}</span>
+                                <span className="text-muted-foreground">
+                                  Low:
+                                </span>
+                                <span className="font-medium text-red-600">
+                                  {formatPrice(data.low)}
+                                </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Close:</span>
-                                <span className="font-medium">{formatPrice(data.close)}</span>
+                                <span className="text-muted-foreground">
+                                  Close:
+                                </span>
+                                <span className="font-medium">
+                                  {formatPrice(data.close)}
+                                </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Volume:</span>
-                                <span className="font-medium">{formatVolume(data.volume)}</span>
+                                <span className="text-muted-foreground">
+                                  Volume:
+                                </span>
+                                <span className="font-medium">
+                                  {formatVolume(data.volume)}
+                                </span>
                               </div>
                               <div className="flex justify-between pt-1 border-t">
-                                <span className="text-muted-foreground">Change:</span>
-                                <span className={`font-medium ${data.close >= data.open ? 'text-green-600' : 'text-red-600'}`}>
-                                  {formatPrice(data.close - data.open)} ({((data.close - data.open) / data.open * 100).toFixed(2)}%)
+                                <span className="text-muted-foreground">
+                                  Change:
+                                </span>
+                                <span
+                                  className={`font-medium ${
+                                    data.close >= data.open
+                                      ? "text-green-600"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {formatPrice(data.close - data.open)} (
+                                  {(
+                                    ((data.close - data.open) / data.open) *
+                                    100
+                                  ).toFixed(2)}
+                                  %)
                                 </span>
                               </div>
                             </div>
@@ -435,19 +485,27 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
               <div className="text-center p-3 rounded-lg border bg-background shadow-sm">
                 <p className="text-xs text-muted-foreground mb-1">Open</p>
-                <p className="font-semibold text-lg">{formatPrice(chartData[chartData.length - 1].open)}</p>
+                <p className="font-semibold text-lg">
+                  {formatPrice(chartData[chartData.length - 1].open)}
+                </p>
               </div>
               <div className="text-center p-3 rounded-lg border bg-background shadow-sm">
                 <p className="text-xs text-muted-foreground mb-1">High</p>
-                <p className="font-semibold text-lg text-green-600">{formatPrice(Math.max(...chartData.map(d => d.high)))}</p>
+                <p className="font-semibold text-lg text-green-600">
+                  {formatPrice(Math.max(...chartData.map((d) => d.high)))}
+                </p>
               </div>
               <div className="text-center p-3 rounded-lg border bg-background shadow-sm">
                 <p className="text-xs text-muted-foreground mb-1">Low</p>
-                <p className="font-semibold text-lg text-red-600">{formatPrice(Math.min(...chartData.map(d => d.low)))}</p>
+                <p className="font-semibold text-lg text-red-600">
+                  {formatPrice(Math.min(...chartData.map((d) => d.low)))}
+                </p>
               </div>
               <div className="text-center p-3 rounded-lg border bg-background shadow-sm">
                 <p className="text-xs text-muted-foreground mb-1">Close</p>
-                <p className="font-semibold text-lg">{formatPrice(chartData[chartData.length - 1].close)}</p>
+                <p className="font-semibold text-lg">
+                  {formatPrice(chartData[chartData.length - 1].close)}
+                </p>
               </div>
             </div>
           </>
@@ -457,16 +515,20 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
         {!isLoading && !error && chartData.length === 0 && (
           <div className="flex items-center justify-center h-[400px] w-full">
             <div className="text-center space-y-2">
-              <p className="text-muted-foreground">No candlestick data available</p>
+              <p className="text-muted-foreground">
+                No candlestick data available
+              </p>
               <p className="text-sm text-muted-foreground">
-                {symbol ? `No data found for ${symbol}` : 'Please select a symbol'}
+                {symbol
+                  ? `No data found for ${symbol}`
+                  : "Please select a symbol"}
               </p>
             </div>
           </div>
         )}
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default PriceTrend
+export default PriceTrend;

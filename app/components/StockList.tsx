@@ -28,7 +28,6 @@ const StockList: React.FC<StockListProps> = ({
 }) => {
   const { data, error, isLoading } = useSWR("api/assets/live", fetcher);
   let mkt_prix = data;
-  console.log("mkt_prix", mkt_prix);
   if (error) console.error(error);
 
   return (

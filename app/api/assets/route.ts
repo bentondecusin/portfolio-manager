@@ -38,7 +38,6 @@ export async function GET(request: Request) {
     }, {});
     return NextResponse.json(Object.values(grouped));
   } catch (err) {
-    console.error("Error fetching assets:", err);
     return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 }
