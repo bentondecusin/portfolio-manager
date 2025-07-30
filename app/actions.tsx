@@ -19,11 +19,11 @@ export async function trade(
         message: `Not enough cash. \$${preTradePrice * quantity} needed`,
       };
     // TODO trade logic
-    else
-      return {
-        success: true,
-        message: `Transaction complete!`,
-      };
+    else fetch(process.env.URL + "/api/transaction", { method: "POST" });
+    return {
+      success: true,
+      message: `Transaction complete!`,
+    };
   }
   if (operationType == "SELL") {
     if (quantity > preTradeHolding)

@@ -80,7 +80,6 @@ const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
       preTradeHolding,
       preTradePrice
     ).then((res) => {
-      console.log(res);
       if (res?.success) setMessage(res.message);
       else res && setMessage(res.message);
       setShowWarning(false); // reset warning
@@ -92,10 +91,10 @@ const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
   useEffect(() => {
     let cash_fetcher = fetch("api/holdings/cash")
       .then((res) => res.json())
-      .then((data) => setPreTradeBalance(data.amount));
+      .then((data) => setPreTradeBalance(data.holding));
     let holding_fetcher = fetch(`api/holdings/${ticker}`)
       .then((res) => res.json())
-      .then((data) => setPreTradeHolding(data.amount));
+      .then((data) => setPreTradeHolding(data.holding));
     let quote_fetcher = fetch(`api/quote/${ticker}`)
       .then((res) => res.json())
       .then((data) => setPreTradePrice(data.price));
@@ -118,7 +117,10 @@ const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
           Holdings: {preTradeHolding} shares (Market value:$
           {preTradePrice * preTradeHolding}){" "}
         </div>
-        <div>Spot price: ${preTradePrice}</div>
+        <div>
+          Spot price:{" "}
+          <span className="text-red-600 animate-pulse">${preTradePrice}</span>
+        </div>
       </div>
 
       <div className="flex items-center justify-center gap-2">
@@ -171,7 +173,7 @@ const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
 
       <button
         onClick={handleExecute}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-lg font-semibold"
+        className="cursor-pointer w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-lg font-semibold"
       >
         Execute
       </button>

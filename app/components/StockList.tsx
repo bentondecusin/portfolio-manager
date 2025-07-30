@@ -58,7 +58,17 @@ const StockList = ({ setIsModalOpen, setTrendSymbol, setPreTradeSymbol }) => {
                   <TableCell>{stock.class}</TableCell>
 
                   <TableCell>
-                    {stock.history[stock.history.length - 1].price}
+                    <span
+                      className={
+                        "animate-pulse text-lg " +
+                        (stock.history[stock.history.length - 1].price >
+                        stock.history[stock.history.length - 2].price
+                          ? "text-red-900"
+                          : "text-emerald-900")
+                      }
+                    >
+                      {stock.history[stock.history.length - 1].price}$
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <TradeButton
