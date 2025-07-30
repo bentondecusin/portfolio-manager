@@ -7,14 +7,20 @@ import { useState } from "react";
 import TradeWindow from "./components/TradeWindow";
 import Navbar from "./components/Navbar";
 import AccountCard from "./components/AccountCard";
-
+type Holding = {
+  symbol: string;
+  tick_name: string;
+  totalShares: number;
+  lastPrice: number;
+  totalValue: number;
+};
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [userState, setUserState] = useState({});
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
   const [trendSymbol, setTrendSymbol] = useState("AAPL");
   const [isTopUpDone, setIsTopUpDone] = useState(true);
-
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [balance, setBalance] = useState<string>("0.00");
   return (
     <div>
       {isModalOpen && (
@@ -23,15 +29,17 @@ export default function Home() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             preTradeSymbol={preTradeSymbol}
-            userState={userState}
-            setUserState={setUserState}
+            holdings={holdings}
+            setHoldings={setHoldings}
+            balance={balance}
+            setBalance={setBalance}
           ></TradeWindow>
         </div>
       )}
       <Navbar />
       <div className="container mx-auto p-4 flex">
         <div className="w-1/2 pr-2 flex flex-col gap-4">
-          <AccountCard 
+          <AccountCard
             isTopUpDone={isTopUpDone}
             setIsTopUpDone={setIsTopUpDone}
           />

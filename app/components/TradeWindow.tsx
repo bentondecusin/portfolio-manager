@@ -4,8 +4,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { trade } from "../actions";
 
-export default function TradeWindow({ isOpen, onClose, preTradeSymbol }) {
-  const [isBuy, setBuy] = useState("fal");
+export default function TradeWindow({
+  isOpen,
+  onClose,
+  preTradeSymbol,
+  holdings,
+  setHoldings,
+  balance,
+  setBalance,
+}) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -29,7 +36,13 @@ export default function TradeWindow({ isOpen, onClose, preTradeSymbol }) {
                 &times;
               </a>
             </button>
-            <TradingWindow ticker={preTradeSymbol}></TradingWindow>
+            <TradingWindow
+              ticker={preTradeSymbol}
+              holdings={holdings}
+              setHoldings={setHoldings}
+              balance={balance}
+              setBalance={setBalance}
+            ></TradingWindow>
           </motion.div>
         </motion.div>
       )}
@@ -43,7 +56,13 @@ interface TradingWindowProps {
   ticker: string;
 }
 
-const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
+const TradingWindow: React.FC<TradingWindowProps> = ({
+  ticker,
+  holdings,
+  setHoldings,
+  balance,
+  setBalance,
+}) => {
   const [quantity, setQuantity] = useState(0);
   const [buy_or_sell, set_buy_or_sell] = useState<"BUY" | "SELL">("BUY");
   const [showWarning, setShowWarning] = useState(false);
@@ -79,8 +98,10 @@ const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
       preTradeHolding,
       preTradePrice
     ).then((res) => {
-      if (res?.success) setMessage(res.message);
-      else res && setMessage(res.message);
+      if (res?.success) {
+        setMessage(res.message);
+        
+      } else res && setMessage(res.message);
       setShowWarning(false); // reset warning
       setWaitExec(false);
     });

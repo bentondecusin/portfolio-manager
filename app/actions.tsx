@@ -8,6 +8,7 @@ export async function trade(
   preTradeHolding,
   preTradePrice
 ) {
+  // Pre Trade
   // Sell spec: holding > toSell => execute sell
   // Buy spec: holding cash > toBuy * price  => execute buy
   // Atomic action: materializes transaction and update holding table
@@ -22,6 +23,7 @@ export async function trade(
       success: false,
       message: `Attempted to sell ${quantity} shares. Only hold ${preTradeHolding} shares`,
     };
+  // On Trade
 
   try {
     console.log("Executing");
@@ -35,7 +37,7 @@ export async function trade(
         price: preTradePrice,
       }),
     });
-
+    // Post Trade
     return {
       success: true,
       message: `Transaction complete!`,
