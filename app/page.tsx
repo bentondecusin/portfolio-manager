@@ -42,9 +42,12 @@ export default function Home() {
         </div>
       </div>
       <div className="container mx-auto p-8">
+       
         <h2 className="text-3xl font-bold mb-6">Current Holding</h2>
         <PortfolioList />
+
         <div className="my-12" />
+
         <h2 className="text-3xl font-bold mb-6">Transaction History</h2>
         <TransactionList />
       </div>

@@ -49,9 +49,9 @@ const TransactionList = () => {
     });
   };
 
-  if (isLoading) {
-    return <div>Loading transactions...</div>;
-  }
+  // if (isLoading) {
+  //   return <div>Loading transactions...</div>;
+  // }
 
   return (
     <TableWrapper>
