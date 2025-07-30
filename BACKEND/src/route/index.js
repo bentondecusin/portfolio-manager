@@ -3,6 +3,7 @@ const cors = require('cors');
 
 const assetRoute = require('./assetRoute');
 const transactionRoute = require('./transactionRoute');
+const holdingRoute = require('./holdingRoute');
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(express.json());
 // Mount routes
 app.use('/transactions', transactionRoute);
 app.use('/assets', assetRoute);
+// app.use('/balance', balanceRoute);
+app.use('/holdings', holdingRoute);
 
 // Fallback for undefined routes (optional)
 app.use((req, res) => {

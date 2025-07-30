@@ -7,5 +7,5 @@ app.listen(PORT, () => {
     console.log(`Server started at port ${PORT}`);
     
     // Start the periodic asset data sync service
-    startPeriodicSync();
+    // startPeriodicSync();
 });
