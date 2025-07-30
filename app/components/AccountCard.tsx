@@ -7,8 +7,14 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-} from "../../components/ui/card"
+} from "@/components/ui/card"
+import TopUp from './TopUpButton'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+
+interface AccountCardProps {
+    amount: string;
+    setAmount: (value: string) => void;
+}
 
 type Transaction = {
     id: string,
@@ -30,7 +36,7 @@ type Holding = {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-const AccountCard = () => {
+const AccountCard: React.FC<AccountCardProps> = ({ amount, setAmount }) => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [holdings, setHoldings] = useState<Holding[]>([]);
     const [loading, setLoading] = useState(true);
@@ -116,8 +122,11 @@ const AccountCard = () => {
             <div className='flex gap-4'>
                 <div className='flex-1'>
                     <CardHeader className='pb-1'>
-                        <CardTitle className='font-semi-bold text-5xl mt-4'>John Doe</CardTitle>
-                    </CardHeader>
+                    <div className='flex items-end justify-start mt-4  space-x-2'>
+                        <CardTitle className='font-semi-bold text-5xl'>Jhon Doe</CardTitle>
+                        <TopUp amount={amount} setAmount={setAmount} />
+                    </div>
+                </CardHeader>
                     <CardContent className='flex gap-3 py-2'>
                         <div className='flex flex-col w-1/2'>
                             <p className='font-semi-bold text-4xl'>Value</p>
@@ -125,7 +134,7 @@ const AccountCard = () => {
                         </div>
                         <div className='flex flex-col w-1/2'>
                             <p className='font-semi-bold text-4xl'>Balance</p>
-                            <CardDescription className='text-xl'>$10000</CardDescription>
+                            <CardDescription className='text-xl'>${amount}</CardDescription>
                         </div>
                     </CardContent>
                 </div>
