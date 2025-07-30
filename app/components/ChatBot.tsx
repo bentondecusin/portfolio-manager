@@ -34,11 +34,8 @@ const ChatBot = () => {
         setIsChatBotOpen(!isChatBotOpen)
     }
 
-    
-
     const handleSendMessage = async () => {
         if (inputValue.trim()) {
-            // Add user message
             const userMessage: Message = {
                 text: inputValue,
                 role: Role.USER,
@@ -49,17 +46,77 @@ const ChatBot = () => {
             setLoading(true)
             setInputValue('')
 
+            // turn down case all the word and find key word "yesterday"
+            const lowerMessage = userMessage.text.toLowerCase();
+            const hasYesterday = lowerMessage.includes('yesterday');
+            const symbolMatch = userMessage.text.match(/\b[A-Z]{2,5}\b/g);
+            const detectedSymbol = symbolMatch ? symbolMatch[0] : null;
+
+            let aiResponseText = '';
+
+            if (hasYesterday) {
+                if (detectedSymbol) {
+                    try {
+                        const url = new URL(`http://localhost:8080/assets/${detectedSymbol}/history`);
+                        url.searchParams.set('type', 'daily');
+                        url.searchParams.set('range', 'week');
+
+                        const resp = await fetch(url.toString())    
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+                        const payload = await resp.json()
+                        const list = payload.data || []
+
+                        if (list.length < 2) {
+                            aiResponseText = `Do not have enough data to get ${detectedSymbol} data.`
+                        } else {
+                            const yesterdayData = list[list.length - 2]
+                            aiResponseText = `Here's ${detectedSymbol}'s data for ${yesterdayData.date}:\n\n` +
+                                `Open: $${yesterdayData.open}\n` +
+                                `High: $${yesterdayData.high}\n` +
+                                `Low: $${yesterdayData.low}\n` +
+                                `Close: $${yesterdayData.close}\n` +
+                                `Volume: ${yesterdayData.volume.toLocaleString()}`;
+                        } 
+                    } catch (error) {
+                        console.error('Error fetching asset data:', error);
+                        aiResponseText = `Sorry, there was an error fetching ${detectedSymbol}'s data. Please try again.`;
+                    }
+                } else {
+                    try {
+                        const url = new URL(`http://localhost:8080/assets/history`);
+                        url.searchParams.set('type', 'daily');
+                        url.searchParams.set('range', 'week');
+
+                        const resp = await fetch(url.toString())
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            aiResponseText = `Here's yesterday's data for all assets:\n\n` +
+                                `Date: ${data.date || 'Yesterday'}\n` +
+                                `Total Assets: ${data.assets?.length ?? 0}\n` +
+                                `Data Points: ${data.data?.length ?? 0}`;
+                        } else {
+                            aiResponseText = `Sorry, I couldn't fetch yesterday's data. Please try again.`;
+                        }
+                    } catch (error) {
+                        console.error('Error fetching yesterday data:', error);
+                        aiResponseText = `Sorry, there was an error fetching yesterday's data. Please try again.`;
+                    }
+                }
+            } else {
+                aiResponseText = `I'm here to help with your financial queries! You can ask me about stock prices by mentioning "yesterday" and a stock symbol, like "What was AAPL's price yesterday?" or just "yesterday" for all assets data.`;
+            }
+
             // Simulate AI response delay
             setTimeout(() => {
                 const aiResponse: Message = {
-                    text: `You said: "${userMessage.text}". How can I help you further?`,
+                    text: aiResponseText,
                     role: Role.AI,
                     timestamp: Date.now()
                 }
 
                 setMessages(prev => [...prev, aiResponse])
                 setLoading(false)
-            }, 1000) // 1 second delay to simulate thinking
+            }, 1000)
         }
     }
 
@@ -85,7 +142,7 @@ const ChatBot = () => {
                                     key={index}
                                     className={`${message.role === Role.AI ? "self-start bg-sky-200" : "self-end bg-violet-200"} pb-5 px-5 py-2 rounded-md w-auto text-left max-w-[80%]`}
                                 >
-                                    <p className="text-sm">{message.text}</p>
+                                    <p className="text-sm whitespace-pre-line">{message.text}</p>
                                 </div>
                             ))}
                             {loading && (
