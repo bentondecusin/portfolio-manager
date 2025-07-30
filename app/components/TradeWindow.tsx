@@ -70,7 +70,6 @@ const TradingWindow: React.FC<TradingWindowProps> = ({ ticker }) => {
       return;
     }
 
-    console.log("Execute trade:", { buy_or_sell, ticker, quantity });
     setWaitExec(true);
     trade(
       buy_or_sell,

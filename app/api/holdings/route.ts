@@ -3,10 +3,25 @@ import { neon } from "@neondatabase/serverless";
 import { error } from "console";
 
 // GET /api/holdings/[symbol]
-export async function GET(request: NextRequest, { params }) {
+export async function GET(request: NextRequest) {
   try {
-    let { symbol } = await params;
-    const sym = symbol.toUpperCase();
+    const sql = process.env.DATABASE_URL && neon(process.env.DATABASE_URL);
+    if (!sql) throw error("failed to connect to neon");
+    const row = await sql.query("SELECT * FROM holdings");
+    return NextResponse.json(row);
+  } catch (err) {
+    console.error("Error fetching asset by symbol:", err);
+    return NextResponse.json({ error: "Database error" }, { status: 500 });
+  }
+}
+
+// POST /api/holdings/[symbol]
+export async function POST(request: NextRequest) {
+  try {
+    const data = await request.json();
+    console.log(data);
+
+    // const sym = symbol.toUpperCase();
     const sql = process.env.DATABASE_URL && neon(process.env.DATABASE_URL);
     if (!sql) throw error("failed to connect to neon");
     const row = await sql.query(`SELECT * FROM holdings WHERE symbol='${sym}'`);

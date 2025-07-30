@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { error } from "console";
 
@@ -12,11 +12,22 @@ interface Asset {
 
 // GET /api/assets/:symbol
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { symbol: string } }
 ) {
   try {
     params = await params;
+    const { type, range } = request.nextUrl.searchParams;
+    // if (days === 7) {
+    //   params.append("type", "daily");
+    //   params.append("range", "week");
+    // } else if (days === 30) {
+    //   params.append("type", "daily");
+    //   params.append("range", "month");
+    // } else {
+    //   params.append("type", "intraday");
+    // }
+
     const sym = params!.symbol!.toUpperCase();
     const sql = process.env.DATABASE_URL && neon(process.env.DATABASE_URL);
     if (!sql) throw error("failed to connect to neon");

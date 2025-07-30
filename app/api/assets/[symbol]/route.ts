@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import { error } from "console";
+import yahooFinance from "yahoo-finance2";
 
 interface Asset {
   symbol: string;
@@ -43,30 +44,6 @@ export async function GET(
     return NextResponse.json(formatted);
   } catch (err) {
     console.error("Error fetching asset by symbol:", err);
-    return NextResponse.json({ error: "Database error" }, { status: 500 });
-  }
-}
-
-// DELETE /api/assets/:symbol
-export async function DELETE(
-  request: Request,
-  { params }: { params: { symbol: string } }
-) {
-  try {
-    const sym = params.symbol.toUpperCase();
-    const [result] = await db.query(`DELETE FROM assets WHERE symbol = ?`, [
-      sym,
-    ]);
-
-    if ((result as any).affectedRows === 0) {
-      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      message: `Deleted asset(s) with symbol ${sym}`,
-    });
-  } catch (err) {
-    console.error("Error deleting asset:", err);
     return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 }
