@@ -56,7 +56,7 @@ const PortfolioList = () => {
         const symbol = transaction.symbol;
         const quantity = parseFloat(transaction.quantity);
         const price = parseFloat(transaction.price);
-        const isBuy = transaction.txn_type === "Buy";
+        const isBuy = transaction.txn_type === "buy";
 
         if (!holdingsMap.has(symbol)) {
           holdingsMap.set(symbol, {
