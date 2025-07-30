@@ -1,6 +1,6 @@
 -- Price data tables for Alpha Vantage integration
--- USE DB_portfolio;
-USE neueda;
+USE DB_portfolio;
+-- USE neueda;
 
 -- House-keeping --
 SET @OLD_FOREIGN_KEY_CHECKS = @@FOREIGN_KEY_CHECKS;

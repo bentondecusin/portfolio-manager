@@ -1,6 +1,6 @@
 -- CREATE DATABASE IF NOT EXISTS DB_portfolio;
--- USE DB_portfolio;
-USE neueda;
+USE DB_portfolio;
+-- USE neueda;
 
 SET @OLD_FOREIGN_KEY_CHECKS = @@FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 0;

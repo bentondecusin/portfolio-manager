@@ -8,6 +8,7 @@ import TradeWindow from "./components/TradeWindow";
 import Navbar from "./components/Navbar";
 import AccountCard from "./components/AccountCard";
 import ChatBot from "./components/ChatBot";
+import TransactionList from "./components/TransactionHistory";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,9 +42,16 @@ export default function Home() {
           />
         </div>
       </div>
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-8">
+       
+        <h2 className="text-3xl font-bold mb-6">Current Holding</h2>
         <PortfolioList />
-        <ChatBot />
+
+        <div className="my-12" />
+
+        <h2 className="text-3xl font-bold mb-6">Transaction History</h2>
+        <TransactionList />
+        <ChatBot/>
       </div>
     </div>
   );
