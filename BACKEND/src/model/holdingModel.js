@@ -21,8 +21,8 @@ async function selectValueBySymbol(symbol) {
 
 async function selectTotalValue() {
   let sql = `SELECT SUM(quantity * average_cost) AS total_value FROM holdings`;
-  const [row] = await db.query(sql);
-  return row;
+  const [rows] = await db.query(sql);
+  return rows[0]; // Return the first row which contains the total_value
 }
 
 module.exports = {
