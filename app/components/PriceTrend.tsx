@@ -304,7 +304,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
       <CardContent className="px-2 sm:px-6 pt-6 pb-2">
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center justify-center h-[400px] w-full">
+          <div className="flex items-center justify-center h-[350px] w-full">
             <div className="text-center space-y-2">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto"></div>
               <p className="text-sm text-muted-foreground">
@@ -319,7 +319,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
 
         {/* Error State */}
         {error && !isLoading && (
-          <div className="flex items-center justify-center h-[400px] w-full">
+          <div className="flex items-center justify-center h-[473px] w-full">
             <div className="text-center space-y-2">
               <p className="text-destructive font-medium">
                 Data Not Available{" "}
@@ -370,11 +370,21 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
                   <XAxis
                     dataKey="date"
                     tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
+                      const date = new Date(value)
+                      if (days === 1) {
+                        // For intraday data, show time in HH:MM format
+                        return date.toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false
+                        })
+                      } else {
+                        // For daily/weekly/monthly data, show date
+                        return date.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      }
                     }}
                     interval="preserveStartEnd"
                     tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
@@ -512,7 +522,7 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
 
         {/* No Data State */}
         {!isLoading && !error && chartData.length === 0 && (
-          <div className="flex items-center justify-center h-[400px] w-full">
+          <div className="flex items-center justify-center h-[350px] w-full">
             <div className="text-center space-y-2">
               <p className="text-muted-foreground">
                 No candlestick data available

@@ -12,6 +12,8 @@ export default function TradeWindow({
   setHoldings,
   balance,
   setBalance,
+  stage,
+  setStage,
 }) {
   return (
     <AnimatePresence>
@@ -38,10 +40,10 @@ export default function TradeWindow({
             </button>
             <TradingWindow
               ticker={preTradeSymbol}
-              holdings={holdings}
-              setHoldings={setHoldings}
               balance={balance}
               setBalance={setBalance}
+              stage={stage}
+              setStage={setStage}
             ></TradingWindow>
           </motion.div>
         </motion.div>
@@ -58,17 +60,17 @@ interface TradingWindowProps {
 
 const TradingWindow: React.FC<TradingWindowProps> = ({
   ticker,
-  holdings,
-  setHoldings,
   balance,
   setBalance,
+  stage,
+  setStage
 }) => {
   const [quantity, setQuantity] = useState(0);
   const [buy_or_sell, set_buy_or_sell] = useState<"BUY" | "SELL">("BUY");
   const [showWarning, setShowWarning] = useState(false);
   const [isWaitExc, setWaitExec] = useState(false);
   const [message, setMessage] = useState("");
-
+  const [showHold, setShowHold] = useState(true);
   const [isInitLoad, setInitLoad] = useState(true);
   const [isInitFailed, setInitFailed] = useState(false);
   const [preTradePrice, setPreTradePrice] = useState(0);
@@ -100,8 +102,10 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
     ).then((res) => {
       if (res?.success) {
         setMessage(res.message);
-        
-      } else res && setMessage(res.message);
+        console.log("Trade executed successfully", res.data);
+        setStage(stage + 1); // Increment stage to trigger re-fetch
+        setShowHold(false);
+      } else {res && setMessage(res.message); }
       setShowWarning(false); // reset warning
       setWaitExec(false);
     });
@@ -109,16 +113,16 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
 
   // Load live cash balance and market price
   useEffect(() => {
-    let cash_fetcher = fetch("api/holdings/cash")
+    let cash_fetcher = fetch("http://localhost:8080/holdings/symbol/USD")
       .then((res) => res.json())
-      .then((data) => setPreTradeBalance(data.holding));
-    let holding_fetcher = fetch(`api/holdings/${ticker}`)
+      .then((data) => setPreTradeBalance(data[0].quantity)).catch((err) => console.error(err));
+    let holding_fetcher = fetch(`http://localhost:8080/holdings/symbol/${ticker}`)
       .then((res) => res.json())
-      .then((data) => setPreTradeHolding(data.holding));
-    let quote_fetcher = fetch(`api/quote/${ticker}`)
+      .then((data) => setPreTradeHolding(data.length != 0 ? data[0].quantity : 0)).catch((err) => console.error(err));
+    let quote_fetcher = fetch(`http://localhost:8080/assets/${ticker}/live`)
       .then((res) => res.json())
-      .then((data) => setPreTradePrice(data.price));
-    Promise.all([cash_fetcher, holding_fetcher, quote_fetcher])
+      .then((data) => setPreTradePrice(data.current_price)).catch((err) => console.error(err));
+    Promise.all([ quote_fetcher, cash_fetcher, holding_fetcher])
       .then(() => {
         setInitLoad(false);
       })
@@ -130,7 +134,7 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
   return (
     <div className="max-w-md mx-auto flex flex-col align-center p-6 space-y-4 bg-white">
       <h2 className="text-xl font-bold text-center">Market Order: {ticker}</h2>
-
+{showHold && <div className="flex flex-col justify-between text-sm text-gray-600 space-y-4">
       <div className="flex flex-col justify-between text-sm text-gray-600">
         <div>Available Cash: ${preTradeBalance} </div>
         <div>
@@ -196,7 +200,8 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
         className="cursor-pointer w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-lg font-semibold"
       >
         Execute
-      </button>
+      </button></div>
+}
       {showWarning && (
         <p className="text-red-600 text-sm font-medium">
           ⚠️ Invalid trade amount. Please enter a positive number.

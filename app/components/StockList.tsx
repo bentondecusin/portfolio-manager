@@ -32,7 +32,6 @@ const StockList: React.FC<StockListProps> = ({
 
   return (
     <div>
-      <h2>Market Watchlist</h2>
       {isLoading && <div>Loading</div>}
       {error && (
         <div className="text-red-500">

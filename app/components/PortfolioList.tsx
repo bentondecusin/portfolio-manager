@@ -27,7 +27,7 @@ type Holding = {
   totalValue: number;
 };
 
-const PortfolioList = () => {
+const PortfolioList = ({stage}) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,9 +44,9 @@ const PortfolioList = () => {
         setLoading(false);
       }
     };
-
+    console.log("Fetching transactions with stage:", stage);
     fetchTransactions();
-  }, []);
+  }, [stage]);
 
   useEffect(() => {
     if (transactions.length > 0) {
@@ -86,7 +86,7 @@ const PortfolioList = () => {
 
       setHoldings(finalHoldings);
     }
-  }, [transactions]);
+  }, [transactions, stage]);
 
   if (loading) {
     return <div>Loading...</div>;

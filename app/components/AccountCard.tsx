@@ -14,6 +14,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 interface AccountCardProps {
   isTopUpDone?: boolean;
   setIsTopUpDone?: (value: boolean) => void;
+  setBalance?: (value: string) => void; // Optional prop to set balance
+  balance?: string; // Optional prop to display balance
 }
 
 type Transaction = {
