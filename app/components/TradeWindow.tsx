@@ -113,9 +113,9 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
 
   // Load live cash balance and market price
   useEffect(() => {
-    let cash_fetcher = fetch("http://localhost:8080/holdings/symbol/USD")
+    let cash_fetcher = fetch("http://localhost:8080/balance")
       .then((res) => res.json())
-      .then((data) => setPreTradeBalance(data[0].quantity)).catch((err) => console.error(err));
+      .then((data) => setPreTradeBalance(data.balance)).catch((err) => console.error(err));
     let holding_fetcher = fetch(`http://localhost:8080/holdings/symbol/${ticker}`)
       .then((res) => res.json())
       .then((data) => setPreTradeHolding(data.length != 0 ? data[0].quantity : 0)).catch((err) => console.error(err));
