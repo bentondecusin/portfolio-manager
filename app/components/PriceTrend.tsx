@@ -322,9 +322,8 @@ const PriceTrend: React.FC<PriceTrendProps> = ({ symbol }) => {
           <div className="flex items-center justify-center h-[400px] w-full">
             <div className="text-center space-y-2">
               <p className="text-destructive font-medium">
-                Error loading chart data
+                Data Not Available{" "}
               </p>
-              <p className="text-sm text-muted-foreground">{error.message}</p>
               <button
                 onClick={handleRefresh}
                 className="text-sm text-primary hover:underline mt-2 px-3 py-1 border rounded"

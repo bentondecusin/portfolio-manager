@@ -35,7 +35,7 @@ const PortfolioList = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const res = await fetch("http://localhost:8080/transactions");
+        const res = await fetch("api/transactions");
         const data = await res.json();
         setTransactions(data);
       } catch (error) {

@@ -51,7 +51,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [balance, setBalance] = useState<string>("0.00");
   const [loading, setLoading] = useState(true);
-
+  const [totalPortfolioValue, setTotalPortfolioValue] = useState(0.0);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -82,17 +82,18 @@ const AccountCard: React.FC<AccountCardProps> = ({
   }, [isTopUpDone, setIsTopUpDone]); // Re-fetch when isTopUpDone changes
 
   useEffect(() => {
-    if (transactions.length > 0) {
+    if (holdings.length > 0) {
       const holdingsMap = new Map<string, Holding>();
       transactions.forEach((transaction) => {
         const symbol = transaction.symbol;
         const quantity = parseFloat(transaction.quantity);
         const price = parseFloat(transaction.price);
+        const tick_name = transaction.tick_name || transaction.symbol;
         const isBuy = transaction.txn_type === "buy";
         if (!holdingsMap.has(symbol)) {
           holdingsMap.set(symbol, {
             symbol,
-            tick_name: transaction.tick_name,
+            tick_name: tick_name,
             totalShares: 0,
             lastPrice: price,
             totalValue: 0,
@@ -107,24 +108,26 @@ const AccountCard: React.FC<AccountCardProps> = ({
         }
         holding.totalValue = holding.totalShares * holding.lastPrice;
       });
+      console.log(holdingsMap);
+
       const finalHoldings = Array.from(holdingsMap.values())
         .filter((holding) => holding.totalShares > 0)
         .sort((a, b) => b.totalValue - a.totalValue);
       setHoldings(finalHoldings);
 
       //
+      setTotalPortfolioValue(
+        holdings.reduce((sum, holding) => sum + holding.totalValue, 0)
+      );
     }
-  }, [transactions]);
+  }, [holdings]);
 
   const pieData = holdings.map((holding, index) => ({
     name: holding.symbol,
     value: holding.totalValue,
     color: COLORS[index % COLORS.length],
   }));
-  const totalPortfolioValue = holdings.reduce(
-    (sum, holding) => sum + holding.totalValue,
-    0
-  );
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const holding = holdings.find((h) => h.symbol === payload[0].name);
