@@ -47,20 +47,20 @@ export default function Home() {
         </div>
 
         {/* Market Data and Stock List */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
           {/* Left Column - Price Trend */}
           <div className="space-y-6 h-fit">
-            <div className="h-[600px] flex flex-col">
+            <div className="flex flex-col">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Price Analysis</h2>
               <div className="flex-1">
-                <PriceTrend symbol={trendSymbol} />
+                <PriceTrend symbol={trendSymbol}/>
               </div>
             </div>
           </div>
           
           {/* Right Column - Stock List */}
           <div className="space-y-6 h-fit">
-            <div className="h-[600px] flex flex-col">
+            <div className="flex flex-col">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Market Watchlist</h2>
               <div className="flex-1">
                 <StockList
@@ -74,7 +74,7 @@ export default function Home() {
         </div>
 
         {/* Portfolio and Transaction Sections */}
-        <div className="space-y-12 mt-36">
+        <div className="space-y-12">
           {/* Current Holdings */}
           <section>
             <div className="flex items-center justify-between mb-6">
