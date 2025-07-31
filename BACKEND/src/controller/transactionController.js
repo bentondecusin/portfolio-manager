@@ -45,7 +45,7 @@ async function postSingleTxn(req, res) {
   try {
     // Validate required fields
     const { symbol, txnType, quantity, price } = req.body;
-    
+  
     if (!symbol || !txnType || !quantity || !price) {
       return res.status(400).json({ 
         error: 'Missing required fields. Please provide symbol, txnType, quantity, and price' 

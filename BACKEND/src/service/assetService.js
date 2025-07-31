@@ -238,12 +238,14 @@ async function fetchAndStoreIntradayHistory(symbol) {
 async function getActiveSymbols() {
   // Hardcoded list of popular/trending stocks to track
   const trendingSymbols = [
+    'TSLA',   // Tesla Inc.
+    'NVDA',   // NVIDIA Corporation
+    'AMZN',   // Amazon.com Inc.
+    'CRM',    // Salesforce Inc.
     'AAPL',   // Apple Inc.
     'MSFT',   // Microsoft Corporation
     'GOOGL',  // Alphabet Inc. Class A
     'AMZN',   // Amazon.com Inc.
-    'NVDA',   // NVIDIA Corporation
-    'TSLA',   // Tesla Inc.
     'META',   // Meta Platforms Inc.
     'NFLX',   // Netflix Inc.
     'AMD',    // Advanced Micro Devices

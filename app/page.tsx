@@ -12,11 +12,11 @@ import TransactionList from "./components/TransactionHistory";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [user, setUser] = useState({});
   const [preTradeSymbol, setPreTradeSymbol] = useState("");
-  const [trendSymbol, setTrendSymbol] = useState("AAPL");
+  const [trendSymbol, setTrendSymbol] = useState("NVDA");
   const [isTopUpDone, setIsTopUpDone] = useState(true);
-  const [balance, setBalance] = useState<string>('0.00');
+  const [balance, setBalance] = useState(0);
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,6 +26,8 @@ export default function Home() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             preTradeSymbol={preTradeSymbol}
+                              balance={balance} setBalance={setBalance}
+
           />
         </div>
       )}
