@@ -27,8 +27,8 @@ async function topUpCash(amount) {
     price: 1.0, // always $1
     txnTs: new Date()
   };
-
-  const result = await txnModel.insertTxn(txn);
+  
+  const result = await txnModel.insertTxn(txn); // insertTxn is a model function
   return result;
 }
 

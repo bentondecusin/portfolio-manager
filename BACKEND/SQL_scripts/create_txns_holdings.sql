@@ -1,7 +1,3 @@
--- Enhanced SQL script with USD balance transactions
--- This script creates the database structure and populates it with dummy data
--- including USD transactions to ensure proper cash balance
-
 CREATE DATABASE IF NOT EXISTS DB_portfolio;
 USE DB_portfolio;
 
@@ -16,7 +12,7 @@ DROP TRIGGER IF EXISTS trg_transactions_after_insert;
 DROP TABLE IF EXISTS holdings;
 DROP TABLE IF EXISTS transactions;
 
--- transactions table
+-- transactions
 CREATE TABLE IF NOT EXISTS transactions (
   id       BIGINT PRIMARY KEY AUTO_INCREMENT,
   symbol   VARCHAR(16)  NOT NULL,
@@ -28,7 +24,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   INDEX idx_symbol_ts (symbol, txn_ts)      -- fast range & aggregation queries
 ) ENGINE=InnoDB;
 
--- holdings table
+-- holdings
 CREATE TABLE IF NOT EXISTS holdings (
   symbol            VARCHAR(16) PRIMARY KEY,
   stock_name        VARCHAR(64) NOT NULL,
@@ -69,8 +65,8 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'price must be positive';
   END IF;
 
-  -- Oversell prevention (skip for USD transactions)
-  IF NEW.txn_type = 'sell' AND NEW.symbol != 'USD' THEN
+  -- Oversell prevention
+  IF NEW.txn_type = 'sell' THEN
     SELECT IFNULL(quantity,0) INTO cur_qty
     FROM holdings
     WHERE symbol = NEW.symbol;
@@ -121,25 +117,23 @@ BEGIN
 
   ELSEIF NEW.txn_type = 'sell' THEN
 
-    -- row must exist due to BEFORE trigger (except for USD)
-    IF NEW.symbol != 'USD' THEN
-      SELECT quantity, average_cost INTO old_qty, old_avg
-      FROM holdings
-      WHERE symbol = NEW.symbol
-      FOR UPDATE;
+    -- row must exist due to BEFORE trigger
+    SELECT quantity, average_cost INTO old_qty, old_avg
+    FROM holdings
+    WHERE symbol = NEW.symbol
+    FOR UPDATE;
 
-      SET new_qty = old_qty - NEW.quantity;
+    SET new_qty = old_qty - NEW.quantity;
 
-      IF new_qty > 0 THEN
-        -- average_cost unchanged on sell
-        UPDATE holdings
-        SET quantity = new_qty,
-            last_update_time = NEW.txn_ts
-        WHERE symbol = NEW.symbol;
-      ELSE
-        -- position closed: remove row
-        DELETE FROM holdings WHERE symbol = NEW.symbol;
-      END IF;
+    IF new_qty > 0 THEN
+      -- average_cost unchanged on sell
+      UPDATE holdings
+      SET quantity = new_qty,
+          last_update_time = NEW.txn_ts
+      WHERE symbol = NEW.symbol;
+    ELSE
+      -- position closed: remove row
+      DELETE FROM holdings WHERE symbol = NEW.symbol;
     END IF;
 
   END IF;
@@ -148,90 +142,48 @@ END$$
 DELIMITER ;
 
 -- #####################################################################
--- Seed (dummy) data with USD balance transactions
+-- Seed (dummy) data – small realistic sample
 -- #####################################################################
-
--- First, add initial USD balance (cash)
 INSERT INTO transactions
         (symbol, tick_name, txn_type, quantity, price,  txn_ts)
 VALUES
-  -- Initial USD balance - $50,000 starting cash
-  ('USD',  'US Dollar', 'buy', 50000.00, 1.00, '2025-01-01 09:00:00');
-
--- Now add stock transactions with USD deductions
-INSERT INTO transactions
-        (symbol, tick_name, txn_type, quantity, price,  txn_ts)
-VALUES
-  -- AAPL transactions
+  -- AAPL — two buys, one sell
   ('AAPL',  'Apple Inc.',            'buy',  25, 172.45, '2025-06-03 14:31:00'),
-  ('USD',   'US Dollar',             'sell', 4311.25, 1.00, '2025-06-03 14:31:00'), -- Deduct cash for AAPL buy
-  
   ('AAPL',  'Apple Inc.',            'buy',  10, 180.10, '2025-06-21 15:05:00'),
-  ('USD',   'US Dollar',             'sell', 1801.00, 1.00, '2025-06-21 15:05:00'), -- Deduct cash for AAPL buy
-  
   ('AAPL',  'Apple Inc.',            'sell',  5, 189.50, '2025-07-10 10:42:00'),
-  ('USD',   'US Dollar',             'buy',  947.50, 1.00, '2025-07-10 10:42:00'), -- Add cash from AAPL sell
 
-  -- MSFT transactions
+  -- MSFT
   ('MSFT',  'Microsoft Corporation', 'buy',  18, 415.80, '2025-06-05 09:45:00'),
-  ('USD',   'US Dollar',             'sell', 7484.40, 1.00, '2025-06-05 09:45:00'), -- Deduct cash for MSFT buy
-  
   ('MSFT',  'Microsoft Corporation', 'buy',  12, 428.20, '2025-07-02 13:20:00'),
-  ('USD',   'US Dollar',             'sell', 5138.40, 1.00, '2025-07-02 13:20:00'), -- Deduct cash for MSFT buy
 
-  -- NVDA transactions
+  -- NVDA
   ('NVDA',  'NVIDIA Corporation',    'buy',  6,  123.70, '2025-06-07 11:15:00'),
-  ('USD',   'US Dollar',             'sell', 742.20, 1.00, '2025-06-07 11:15:00'), -- Deduct cash for NVDA buy
-  
   ('NVDA',  'NVIDIA Corporation',    'sell', 2,  138.95, '2025-07-15 14:10:00'),
-  ('USD',   'US Dollar',             'buy',  277.90, 1.00, '2025-07-15 14:10:00'), -- Add cash from NVDA sell
 
-  -- AMZN transactions
+  -- AMZN
   ('AMZN',  'Amazon.com Inc.',       'buy',  4,  184.30, '2025-06-10 10:00:00'),
-  ('USD',   'US Dollar',             'sell', 737.20, 1.00, '2025-06-10 10:00:00'), -- Deduct cash for AMZN buy
-  
   ('AMZN',  'Amazon.com Inc.',       'buy',  3,  192.15, '2025-07-01 16:25:00'),
-  ('USD',   'US Dollar',             'sell', 576.45, 1.00, '2025-07-01 16:25:00'), -- Deduct cash for AMZN buy
-  
   ('AMZN',  'Amazon.com Inc.',       'sell', 1,  199.40, '2025-07-18 11:08:00'),
-  ('USD',   'US Dollar',             'buy',  199.40, 1.00, '2025-07-18 11:08:00'), -- Add cash from AMZN sell
 
-  -- GOOGL transactions
+  -- GOOGL
   ('GOOGL', 'Alphabet Inc.-Class A', 'buy',  7,  145.60, '2025-06-12 14:55:00'),
-  ('USD',   'US Dollar',             'sell', 1019.20, 1.00, '2025-06-12 14:55:00'), -- Deduct cash for GOOGL buy
-  
   ('GOOGL', 'Alphabet Inc.-Class A', 'buy',  5,  151.25, '2025-06-28 09:37:00'),
-  ('USD',   'US Dollar',             'sell', 756.25, 1.00, '2025-06-28 09:37:00'), -- Deduct cash for GOOGL buy
 
-  -- TSLA transactions
+  -- TSLA
   ('TSLA',  'Tesla Inc.',            'buy',  8,  242.80, '2025-06-15 15:12:00'),
-  ('USD',   'US Dollar',             'sell', 1942.40, 1.00, '2025-06-15 15:12:00'), -- Deduct cash for TSLA buy
-  
   ('TSLA',  'Tesla Inc.',            'sell', 3,  256.75, '2025-07-12 10:50:00'),
-  ('USD',   'US Dollar',             'buy',  770.25, 1.00, '2025-07-12 10:50:00'), -- Add cash from TSLA sell
 
-  -- JPM transactions
+  -- JPM
   ('JPM',   'JPMorgan Chase & Co.',  'buy',  20, 195.10, '2025-06-18 13:03:00'),
-  ('USD',   'US Dollar',             'sell', 3902.00, 1.00, '2025-06-18 13:03:00'), -- Deduct cash for JPM buy
-  
   ('JPM',   'JPMorgan Chase & Co.',  'buy',  15, 199.25, '2025-07-03 12:44:00'),
-  ('USD',   'US Dollar',             'sell', 2988.75, 1.00, '2025-07-03 12:44:00'), -- Deduct cash for JPM buy
 
-  -- NFLX transactions
+  -- NFLX
   ('NFLX',  'Netflix Inc.',          'buy',   5, 649.50, '2025-06-20 11:28:00'),
-  ('USD',   'US Dollar',             'sell', 3247.50, 1.00, '2025-06-20 11:28:00'), -- Deduct cash for NFLX buy
-  
   ('NFLX',  'Netflix Inc.',          'sell',  2, 678.85, '2025-07-14 09:59:00'),
-  ('USD',   'US Dollar',             'buy',  1357.70, 1.00, '2025-07-14 09:59:00'), -- Add cash from NFLX sell
 
-  -- KO transactions
+  -- Extra diversity
   ('KO',    'Coca-Cola Company',     'buy',  30, 63.40,  '2025-06-24 14:17:00'),
-  ('USD',   'US Dollar',             'sell', 1902.00, 1.00, '2025-06-24 14:17:00'), -- Deduct cash for KO buy
-  
-  ('KO',    'Coca-Cola Company',     'sell', 10, 67.05,  '2025-07-09 15:33:00'),
-  ('USD',   'US Dollar',             'buy',  670.50, 1.00, '2025-07-09 15:33:00'); -- Add cash from KO sell
+  ('KO',    'Coca-Cola Company',     'sell', 10, 67.05,  '2025-07-09 15:33:00');
 
--- Quick sanity queries to verify the data
--- SELECT 'Current USD Balance' as info, quantity as balance FROM holdings WHERE symbol = 'USD';
--- SELECT 'Total Holdings Value' as info, SUM(quantity * average_cost) as total_value FROM holdings WHERE symbol != 'USD';
--- SELECT 'All Holdings' as info, symbol, stock_name, quantity, average_cost FROM holdings ORDER BY symbol; 
+-- Quick sanity query
+-- SELECT * FROM v_holding_live ORDER BY market_value DESC;

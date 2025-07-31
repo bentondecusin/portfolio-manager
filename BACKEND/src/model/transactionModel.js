@@ -38,26 +38,6 @@ async function insertTxn(txn) {
   return { id: res.insertId, ...txn };
 }
 
-// UPSERT methods
-async function upsertTxnById(id, txn) {
-  const { symbol, tickName, txnType, quantity, price, txnTs } = txn;
-  
-  const sql = `
-    INSERT INTO transactions (id, symbol, tick_name, txn_type, quantity, price, txn_ts)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      symbol = VALUES(symbol),
-      tick_name = VALUES(tick_name),
-      txn_type = VALUES(txn_type),
-      quantity = VALUES(quantity),
-      price = VALUES(price),
-      txn_ts = VALUES(txn_ts)
-  `;
-  
-  const [res] = await db.query(sql, [id, symbol, tickName, txnType, quantity, price, txnTs]);
-  return res;
-}
-
 // Keep the original update method for backward compatibility
 async function updateTxnById(id, txn) {
   const { symbol, tickName, txnType, quantity, price, txnTs } = txn;
@@ -92,7 +72,6 @@ module.exports = {
   selectAllTxnBySymbol,
   selectAllTxnByDate,
   updateTxnById,
-  // upsertTxnById,
   deleteTxnById,
   getHoldings,
 };

@@ -8,7 +8,12 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'DB_portfolio',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  // Enable transactions
+  multipleStatements: true
 });
+
+// The pool already has getConnection method from mysql2/promise
+// No need to add it explicitly
 
 module.exports = pool;
