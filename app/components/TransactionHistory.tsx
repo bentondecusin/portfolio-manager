@@ -19,7 +19,7 @@ type Transaction = {
   txn_ts: string
 };
 
-const TransactionHistory = () => {
+const TransactionHistory = ({stage}) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +40,7 @@ const TransactionHistory = () => {
       }
     };
     fetchTransactions();
-  }, []);
+  }, [stage]);
 
   if (loading) {
     return <div>Loading...</div>;

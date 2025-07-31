@@ -16,7 +16,7 @@ export default function Home() {
   const [trendSymbol, setTrendSymbol] = useState("NVDA");
   const [isTopUpDone, setIsTopUpDone] = useState(true);
   const [balance, setBalance] = useState(0);
-
+  const [stage, setStage] = useState(1);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,8 +26,10 @@ export default function Home() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             preTradeSymbol={preTradeSymbol}
-                              balance={balance} setBalance={setBalance}
-
+            balance={balance} 
+            setBalance={setBalance}
+            stage={stage}
+            setStage={setStage}
           />
         </div>
       )}
@@ -43,6 +45,7 @@ export default function Home() {
             setIsTopUpDone={setIsTopUpDone}
             setBalance={setBalance}
             balance={balance}
+            stage={stage}
           />
         </div>
 
@@ -81,7 +84,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-gray-900">Current Holdings</h2>
               <div className="h-1 bg-gradient-to-r from-blue-500 to-transparent flex-1 ml-6 rounded-full"></div>
             </div>
-            <PortfolioList />
+            <PortfolioList stage={stage} />
           </section>
 
           {/* Transaction History */}
@@ -90,7 +93,7 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-gray-900">Transaction History</h2>
               <div className="h-1 bg-gradient-to-r from-green-500 to-transparent flex-1 ml-6 rounded-full"></div>
             </div>
-            <TransactionList />
+            <TransactionList stage={stage} />
           </section>
         </div>
 

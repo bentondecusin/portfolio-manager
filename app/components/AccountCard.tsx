@@ -55,6 +55,7 @@ const COLORS = [
 ];
 
 const AccountCard: React.FC<AccountCardProps> = ({
+  stage,
   isTopUpDone,
   setIsTopUpDone,
   setBalance,
@@ -111,9 +112,9 @@ const AccountCard: React.FC<AccountCardProps> = ({
         setLoading(false);
       }
     };
-
+    console.log("Fetching data with stage:", stage);
     fetchData();
-  }, [isTopUpDone, setIsTopUpDone]); // Re-fetch when isTopUpDone changes
+  }, [stage, isTopUpDone, setIsTopUpDone]); // Re-fetch when isTopUpDone changes
 
   useEffect(() => {
     const fetchHoldingsData = async () => {
@@ -186,9 +187,9 @@ const AccountCard: React.FC<AccountCardProps> = ({
     };
 
     fetchHoldingsData();
-  }, [transactions]);
+  }, [stage, transactions]);
 
-  const pieData = holdings.map((holding, index) => ({
+  const pieData = holdings.filter((holding) => holding.symbol != "USD").map((holding, index) => ({
     name: holding.symbol,
     value: holding.totalValue,
     color: COLORS[index % COLORS.length],
@@ -241,13 +242,13 @@ const AccountCard: React.FC<AccountCardProps> = ({
         {/* Middle Section - Value and Balance */}
         <div className="flex flex-col justify-center gap-6 w-1/4">
           <div className="text-center">
-            <p className="font-bold text-4xl mb-2">Value</p>
+            <p className="font-bold text-4xl mb-2">Portfolio Value</p>
             <CardDescription className="text-3xl font-semibold">
-              ${parseFloat(totalValue).toFixed(0)}
+              ${parseFloat(totalValue - balance).toFixed(0)}
             </CardDescription>
           </div>
           <div className="text-center">
-            <p className="font-bold text-4xl mb-2">Balance</p>
+            <p className="font-bold text-4xl mb-2">Cash Balance</p>
             <CardDescription className="text-3xl font-semibold">
               ${balance}
             </CardDescription>
@@ -293,7 +294,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
                     dominantBaseline="middle"
                     className="text-sm font-semibold fill-foreground"
                   >
-                    ${parseFloat(totalValue).toFixed(0)}
+                    ${parseFloat(totalValue - balance).toFixed(0)}
                   </text>
                   <text
                     x="50%"
@@ -302,7 +303,7 @@ const AccountCard: React.FC<AccountCardProps> = ({
                     dominantBaseline="middle"
                     className="text-xs fill-muted-foreground"
                   >
-                    Total Value
+                    Portfolio Value
                   </text>
                 </PieChart>
               </ResponsiveContainer>

@@ -12,6 +12,8 @@ export default function TradeWindow({
   setHoldings,
   balance,
   setBalance,
+  stage,
+  setStage,
 }) {
   return (
     <AnimatePresence>
@@ -40,6 +42,8 @@ export default function TradeWindow({
               ticker={preTradeSymbol}
               balance={balance}
               setBalance={setBalance}
+              stage={stage}
+              setStage={setStage}
             ></TradingWindow>
           </motion.div>
         </motion.div>
@@ -58,6 +62,8 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
   ticker,
   balance,
   setBalance,
+  stage,
+  setStage
 }) => {
   const [quantity, setQuantity] = useState(0);
   const [buy_or_sell, set_buy_or_sell] = useState<"BUY" | "SELL">("BUY");
@@ -97,6 +103,7 @@ const TradingWindow: React.FC<TradingWindowProps> = ({
       if (res?.success) {
         setMessage(res.message);
         console.log("Trade executed successfully", res.data);
+        setStage(stage + 1); // Increment stage to trigger re-fetch
         setShowHold(false);
       } else {res && setMessage(res.message); }
       setShowWarning(false); // reset warning
